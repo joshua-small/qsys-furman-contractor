@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>JoshuaSmall.Qsys.FurmanContractor</PackageId>
+    <Version>1.2.0.3</Version>
+    <Title>Furman Contractor Series</Title>
+    <Authors>Joshua Small</Authors>
+    <Description>Furman Contractor Series SmartSequencer serial control for Q-SYS.</Description>
+    <PackageProjectUrl>https://github.com/joshua-small/qsys-furman-contractor</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/joshua-small/qsys-furman-contractor</RepositoryUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageIconUrl>https://joshua-small.github.io/qsys-furman-contractor/icon.png</PackageIconUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>Q-SYS;Plugin;FurmanContractor</PackageTags>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <NoWarn>NU5128</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="content/FurmanContractorSmartSequencer.qplug" Pack="true" PackagePath="content/" />
+    <None Include="icon.png" Pack="true" PackagePath="/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

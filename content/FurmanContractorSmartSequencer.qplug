@@ -1,0 +1,4576 @@
+-- Furman Contractor Series SmartSequencer
+-- by Joshua Small
+-- 2026-10-02
+
+--*** Plugin information ***
+PluginInfo = {
+  Id = "b6890c6f-d9cc-461b-89c7-7327ae65e09c",
+  Name = "Furman~Contractor Series SmartSequencer",
+  Author = "Joshua Small",
+  BuildVersion = "1.2.0.3",
+  Version = "1.2.0.3",
+  ShowDebug = true,
+  Description = "Configured SmartSequencer chain with Global and per-device pages, identity, measurements and physical settings.",
+  Model = "Contractor Series SmartSequencer",
+  Manufacturer = "Furman",
+}
+
+--*** Design-time constants ***
+White = { 255, 255, 255, 255 }
+Black = { 0, 0, 0, 255 }
+IndicatorGreen = { 0, 159, 60 }
+GroupBoxGray = { 230, 230, 230, 255 }
+ReadoutGray = { 194, 194, 194, 255 }
+OutlineGray = { 128, 128, 128, 255 }
+BrandColor = { 24, 119, 189 }
+LogoSvg =
+  "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgaWQ9ImxheWVyIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMTkuNjk5OTk5OTk5OTk5OTkyIDI3My4zMDAwMDAwMDAwMDAwNyA2MDIuMjAwMDAwMDAwMDAwNCA5OC4wMDAwMDAwMDAwMDAxNyIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNjUyIDY1MjsiIHhtbDpzcGFjZT0icHJlc2VydmUiIHdpZHRoPSI2MDIuMjAwMDAwMDAwMDAwNCIgaGVpZ2h0PSI5OC4wMDAwMDAwMDAwMDAxNyI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6IzAwN0RCQTt9Cjwvc3R5bGU+CjxnPgoJPHBhdGggZD0iTTI0NC43LDM2OC44aDM2LjJsMi4xLTUuNmMtMS4zLTAuNC0yLjMtMS4yLTIuNy0yLjVjLTAuNy0xLjcsMC0zLjMsMC42LTVsOC4xLTE5LjNjMC44LTIsMC44LTMuOSwwLTUuOSAgIGMtMC43LTEuOC0yLjktNS40LTQuOS01LjljNC45LTIuMSw4LjctNS44LDEyLjItOS44YzEuOC0yLDUuMi02LjIsNi44LTkuNWMxLjUtMi43LDIuNS00LjYsMy4yLTcuN2MwLjctMi45LDAuOS00LjcsMC45LTcuNyAgIGMtMC4zLTQuMi0xLjgtNy0zLjItOC45Yy0zLjEtNC4yLTYuNi02LjUtMTEuOS02LjVoLTU5LjNsLTYuNSwxNS40bC00LDkuOWwtMy43LDguOGwtNi4xLDE0LjVoMGwtMTksNDUuN2gyOS4ybDE0LjUtMzQuNmwxMC43LDAuNSAgIGMyLjcsMC4xLDUsMS4zLDYuMywzLjZjMS4yLDIsMS40LDQuNCwwLjYsNi42TDI0NC43LDM2OC44eiBNMjQ1LjYsMzEzLjlsNS41LTEzaDE3LjhjMS4zLDAsMi4zLDEsMi45LDJjMC40LDAuNywwLjcsMS41LDAuNywyLjUgICBjMC4xLDMtMiw1LjUtMy4xLDYuM2MtMS44LDEuNC0zLjYsMi4zLTUuOSwyLjNIMjQ1LjZ6IE0yODcuMSwzNjguOGgyNi4zbDIxLjktNTIuM2wwLjItMC41bC0xLjYsMTAuNGwtNi41LDQyLjNoMTkuN2wzMC43LTQ1LjdoMCAgIGw0LjctNy4xbDAsMC4xbDAsMGwtNC4xLDEwLjNsLTE3LjcsNDIuM2gyN2wxOC43LTQ1LjZoMGw3LjUtMTcuOGgwLjFsMTIuOS0zMC44aC0zNy40bC0xMC44LDE1LjRsLTIxLDI5LjVsLTAuMywwbDUuNC0zNC43ICAgbDEuNy0xMC4xaC0zOC4zbC02LjQsMTUuNGwtNC42LDExLjJsLTMuMiw3LjZsLTcuNCwxNy44TDI4Ny4xLDM2OC44eiBNMzM1LjYsMzE1LjlMMzM1LjYsMzE1LjlMMzM1LjYsMzE1LjlMMzM1LjYsMzE1Ljl6ICAgIE0xMTcuOCwzMjYuNWwtMy43LDguOWMtMy4yLDcuOC0zLjgsMTQuNiwwLjQsMjIuMWM1LjEsOS4xLDE0LjIsMTEuNCwyNC44LDExLjRoOS44YzE0LDAsMjMuNC0yLjcsMzQtMTEuNiAgIGM3LjctNi40LDExLTExLjksMTQuOC0yMS4ybDUuMi0xMi44bDcuNC0xNy44bDcuNi0xOC40bDUuMy0xMi41aC0zMC4ybC01LDEyLjVsLTEuNCwzbC02LjMsMTUuNGwtMS40LDMuM2wtNiwxNC41bC00LjMsMTAuMSAgIGMtMyw3LTEwLjYsMTEuNS0xNy4zLDEwLjNjLTUuMi0wLjgtNy43LTYuOS01LjktMTEuM2wyLjUtNS44bDcuNC0xNy44bDcuOS0xOC43bDYuMi0xNS40aC0zMC4ybC02LjQsMTUuNGwtNy43LDE4LjdMMTE3LjgsMzI2LjV6ICAgIE00MjAuNSwzNjguOGwxMy45LTE4aDI2LjdsLTEuOSwxOGgzMC42bDMuMi00NS43bDEuMi0xNy44bDIuMS0zMC44aC0zMS44TDQ1NSwyODdsLTIuMywzbC0xMS42LDE1LjRsLTIuNiwzLjNsLTExLjMsMTQuNSAgIGwtMzUsNDUuN0g0MjAuNXogTTQ1NS41LDMyMy4xTDQ2NSwzMTFsLTEuNSwxNS40bC0wLjQsNC4xaC0xMy4zTDQ1NS41LDMyMy4xeiBNNTIuMSwzNjguMmwxMi40LTI5LjZIOTZsNi45LTE1LjRsNC4yLTkuNUg3NS4zICAgbDMuNC04LjNsMS44LTQuNGgzOC42bDUuNy0xNGgwLjFsNS4xLTEyLjVoLTAuMnYwbC03MSwwTDUzLjgsMjg3aDAuMWwtNy42LDE4LjRoMC4xbDAsMGwtMC4xLDBsLTIuNyw2LjZsLTQuNywxMS4yaDAuMWwtMTguMyw0NS4xICAgSDUyLjF6IE01ODUuNSwyODdsLTEuNCwzbC02LjMsMTUuNGwtNS43LDEzLjlsLTMuNC0xMy45bC00LjUtMTguNGwtMy4zLTEyLjVoLTI3LjNsLTUsMTIuNWwtMS40LDNsLTYuMywxNS40bC03LjUsMTcuOGwtMS4zLDMuMyAgIGwtMTcuOCw0Mi4zaDI5LjlsMTkuMi00NS43bDEuNi00LjJsMSw0LjJsMC42LDMuM2w5LDQyLjNoMjZsMTkuMS00NS43bDcuNS0xNy44bDcuNy0xOC40bDUtMTIuNWgtMjkuOUw1ODUuNSwyODd6IiBmaWxsPSIjMDA3REJBIiAvPgoJPHBhdGggZD0iTTU5OC44LDM1NC45YzQuMiwwLDcuNywzLjQsNy43LDcuN2MwLDQuMy0zLjUsNy43LTcuNyw3LjdjLTQuMiwwLTcuNy0zLjQtNy43LTcuNyAgIEM1OTEuMSwzNTguMyw1OTQuNSwzNTQuOSw1OTguOCwzNTQuOSBNNTk4LjgsMzY5LjNjMy43LDAsNi41LTIuOSw2LjUtNi42YzAtMy43LTIuOC02LjYtNi41LTYuNmMtMy43LDAtNi41LDIuOS02LjUsNi42ICAgQzU5Mi4zLDM2Ni40LDU5NS4xLDM2OS4zLDU5OC44LDM2OS4zIE01OTcsMzY3LjFoLTEuMXYtOS4xaDMuNWMyLjEsMCwzLjEsMC45LDMuMSwyLjZjMCwxLjYtMS4xLDIuMy0yLjMsMi41bDIuNyw0aC0xLjRsLTIuNS00ICAgSDU5N1YzNjcuMXogTTU5OS4xLDM2Mi4xYzEuNCwwLDIuMS0wLjUsMi4xLTEuNWMwLTAuOS0wLjgtMS41LTIuMS0xLjVoLTJ2Mi45SDU5OS4xeiIgZmlsbD0iIzAwN0RCQSIgLz4KPC9nPgo8L3N2Zz4="
+
+SequencerFields = {
+  {
+    pretty = "Sequencer Label",
+    name = "SeqLabel",
+    kind = "Text",
+  },
+  {
+    pretty = "Physical Settings~Alarm Setting",
+    name = "AlarmSetting",
+    kind = "Text",
+  },
+  {
+    pretty = "Physical Settings~Switching Mode",
+    name = "SwitchingMode",
+    kind = "Text",
+  },
+  {
+    pretty = "Physical Settings~Max Delay",
+    name = "MaxDelay",
+    kind = "Text",
+  },
+  {
+    pretty = "Physical Settings~Delay Adjust",
+    name = "DelayAdjust",
+    kind = "Text",
+  },
+  {
+    pretty = "Physical Settings~Extreme Voltage",
+    name = "EVSSetting",
+    kind = "Text",
+  },
+  {
+    pretty = "Physical Settings~Sequencer Setting",
+    name = "SequencerSetting",
+    kind = "Text",
+  },
+  {
+    pretty = "Physical Settings~Total Delay",
+    name = "TotalDelay",
+    kind = "Text",
+  },
+  {
+    pretty = "Physical Settings~Key Switch",
+    name = "KeySwitch",
+    kind = "Text",
+  },
+  {
+    pretty = "Power~Volts",
+    name = "Voltage",
+    kind = "Text",
+  },
+  {
+    pretty = "Power~Amps",
+    name = "Current",
+    kind = "Text",
+  },
+  {
+    pretty = "Power~Watts",
+    name = "Power",
+    kind = "Text",
+  },
+  {
+    pretty = "Power~VA Power",
+    name = "PowerVA",
+    kind = "Text",
+  },
+  {
+    pretty = "Power~Power Factor",
+    name = "PowerFactor",
+    kind = "Text",
+  },
+  {
+    pretty = "Commands~Clear Logs",
+    name = "ClearPERBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "Commands~Reset",
+    name = "ResetBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "All Off",
+    name = "AllOffBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "Commands~Events On",
+    name = "EventsOnBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "Sequence On",
+    name = "SeqOnBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "Commands~Events Off",
+    name = "EventsOffBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "Sequence Off",
+    name = "SeqOffBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "ID~Firmware Revision",
+    name = "FirmwareRevision",
+    kind = "Text",
+  },
+  {
+    pretty = "ID~Serial Number",
+    name = "SerialNumber",
+    kind = "Text",
+  },
+  {
+    pretty = "ID~Model",
+    name = "Model",
+    kind = "Text",
+  },
+  {
+    pretty = "ID~Brand",
+    name = "Brand",
+    kind = "Text",
+  },
+  {
+    pretty = "Status~Link Status",
+    name = "LinkStatus",
+    kind = "Led",
+  },
+  {
+    pretty = "Status~Pushbutton",
+    name = "Pushbutton",
+    kind = "Led",
+  },
+  {
+    pretty = "Status~Remote Input",
+    name = "RemoteInput",
+    kind = "Led",
+  },
+  {
+    pretty = "Status~Alarm",
+    name = "Alarm",
+    kind = "Led",
+  },
+  {
+    pretty = "Status~SMP Relay",
+    name = "SMPRelay",
+    kind = "Led",
+  },
+  {
+    pretty = "Status~Extreme Voltage Status",
+    name = "ExtremeVoltage",
+    kind = "Led",
+  },
+  {
+    pretty = "Status~Protect Status",
+    name = "ProtectStatus",
+    kind = "Led",
+  },
+  {
+    pretty = "Status~Secondary PER",
+    name = "SecondaryPER",
+    kind = "Text",
+  },
+  {
+    pretty = "Status~Primary PER",
+    name = "PrimaryPER",
+    kind = "Text",
+  },
+  {
+    pretty = "ID~Position",
+    name = "SeqPosition",
+    kind = "Text",
+  },
+  {
+    pretty = "ID~Revision Date",
+    name = "RevisionDate",
+    kind = "Text",
+  },
+  {
+    pretty = "Bank 1~Bank 1 On",
+    name = "Bank1OnBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "Bank 1~Bank 1 Off",
+    name = "Bank1OffBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "Bank 2~Bank 2 On",
+    name = "Bank2OnBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "Bank 2~Bank 2 Off",
+    name = "Bank2OffBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "Bank 3~Bank 3 On",
+    name = "Bank3OnBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "Bank 3~Bank 3 Off",
+    name = "Bank3OffBtn",
+    kind = "Button",
+  },
+  {
+    pretty = "Status~Present",
+    name = "Present",
+    kind = "Led",
+  },
+  {
+    pretty = "Status~Events Enabled",
+    name = "EventsEnabled",
+    kind = "Led",
+  },
+  {
+    pretty = "Bank 1~Bank 1 Status",
+    name = "Bank1Status",
+    kind = "Led",
+  },
+  {
+    pretty = "Bank 2~Bank 2 Status",
+    name = "Bank2Status",
+    kind = "Led",
+  },
+  {
+    pretty = "Bank 3~Bank 3 Status",
+    name = "Bank3Status",
+    kind = "Led",
+  },
+  {
+    pretty = "Status~Remote Voltage",
+    name = "RemoteVoltage",
+    kind = "Text",
+  },
+}
+GlobalFields = {
+  {
+    name = "ConnectionStatus",
+    kind = "Status",
+  },
+  {
+    name = "SystemFault",
+    kind = "Led",
+  },
+  {
+    name = "EventLog",
+    kind = "Text",
+  },
+  {
+    name = "DiscoveredCount",
+    kind = "Text",
+  },
+  {
+    name = "HelpResponse",
+    kind = "Text",
+  },
+  {
+    name = "HelpBtn",
+    kind = "Button",
+  },
+  {
+    name = "ReconnectBtn",
+    kind = "Button",
+  },
+  {
+    name = "Parity",
+    kind = "Text",
+  },
+  {
+    name = "StopBits",
+    kind = "Text",
+  },
+  {
+    name = "DataBits",
+    kind = "Text",
+  },
+  {
+    name = "FlowControl",
+    kind = "Text",
+  },
+  {
+    name = "GlobalSeqOff",
+    kind = "Button",
+  },
+  {
+    name = "GlobalEventsOff",
+    kind = "Button",
+  },
+  {
+    name = "StartBits",
+    kind = "Text",
+  },
+  {
+    name = "BaudRate",
+    kind = "Text",
+  },
+  {
+    name = "GlobalReset",
+    kind = "Button",
+  },
+  {
+    name = "GlobalClearPER",
+    kind = "Button",
+  },
+  {
+    name = "RollCallBtn",
+    kind = "Button",
+  },
+  {
+    name = "EnumerateBtn",
+    kind = "Button",
+  },
+  {
+    name = "GlobalSeqOn",
+    kind = "Button",
+  },
+  {
+    name = "GlobalEventsOn",
+    kind = "Button",
+  },
+  {
+    name = "GlobalAllOff",
+    kind = "Button",
+  },
+}
+
+--*** Reserved design-time functions ***
+function GetColor(props)
+  return BrandColor
+end
+
+function GetPrettyName(props)
+  return "Furman "
+    .. props["Primary Sequencer Model"].Value
+    .. " SmartSequencer v"
+    .. PluginInfo.BuildVersion
+end
+
+function GetProperties()
+  return {
+    {
+      Type = "integer",
+      Name = "Number of Secondary Sequencers",
+      Min = 0,
+      Max = 8,
+      Value = 0,
+    },
+    {
+      Type = "enum",
+      Choices = { "CN-1800S", "CN-2400S", "CN-3600SE" },
+      Name = "Primary Sequencer Model",
+      Value = "CN-1800S",
+    },
+    {
+      Type = "integer",
+      Name = "Poll Interval (s)",
+      Min = 3,
+      Max = 60,
+      Value = 10,
+    },
+    {
+      Type = "boolean",
+      Name = "Auto-Enable Events",
+      Value = true,
+    },
+    {
+      Type = "enum",
+      Choices = { "None", "Tx/Rx", "Tx", "Rx", "Function Calls", "All" },
+      Name = "Debug Print",
+      Value = "None",
+    },
+  }
+end
+
+function RectifyProperties(props)
+  if props["plugin_show_debug"] then
+    props["Debug Print"].IsHidden = not props["plugin_show_debug"].Value
+  end
+  return props
+end
+
+function GetPins(props)
+  return { { Name = "Serial Port", Direction = "input", Domain = "serial" } }
+end
+
+function GetControls(props)
+  local count = props["Number of Secondary Sequencers"].Value + 1
+  local controls = {
+    {
+      Count = 1,
+      Name = "ConnectionStatus",
+      IndicatorType = "Status",
+      PinStyle = "Output",
+      ControlType = "Indicator",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "SystemFault",
+      IndicatorType = "Led",
+      PinStyle = "Output",
+      ControlType = "Indicator",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "EventLog",
+      ControlType = "Text",
+      PinStyle = "Output",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "DiscoveredCount",
+      ControlType = "Text",
+      PinStyle = "Output",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "HelpResponse",
+      ControlType = "Text",
+      PinStyle = "Output",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "HelpBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      PinStyle = "Input",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "ReconnectBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      PinStyle = "Input",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "Parity",
+      ControlType = "Text",
+      PinStyle = "Output",
+      UserPin = true,
+      DefaultValue = "None",
+    },
+    {
+      Count = 1,
+      Name = "StopBits",
+      ControlType = "Text",
+      PinStyle = "Output",
+      UserPin = true,
+      DefaultValue = "1",
+    },
+    {
+      Count = 1,
+      Name = "DataBits",
+      ControlType = "Text",
+      PinStyle = "Output",
+      UserPin = true,
+      DefaultValue = "8",
+    },
+    {
+      Count = 1,
+      Name = "FlowControl",
+      ControlType = "Text",
+      PinStyle = "Output",
+      UserPin = true,
+      DefaultValue = "None",
+    },
+    {
+      Count = 1,
+      Name = "GlobalSeqOff",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      PinStyle = "Input",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "GlobalEventsOff",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      PinStyle = "Input",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "StartBits",
+      ControlType = "Text",
+      PinStyle = "Output",
+      UserPin = true,
+      DefaultValue = "1",
+    },
+    {
+      Count = 1,
+      Name = "BaudRate",
+      ControlType = "Text",
+      PinStyle = "Output",
+      UserPin = true,
+      DefaultValue = "19200",
+    },
+    {
+      Count = 1,
+      Name = "GlobalReset",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      PinStyle = "Input",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "GlobalClearPER",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      PinStyle = "Input",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "RollCallBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      PinStyle = "Input",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "EnumerateBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      PinStyle = "Input",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "GlobalSeqOn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      PinStyle = "Input",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "GlobalEventsOn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      PinStyle = "Input",
+      UserPin = true,
+    },
+    {
+      Count = 1,
+      Name = "GlobalAllOff",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      PinStyle = "Input",
+      UserPin = true,
+    },
+    {
+      Count = count,
+      Name = "SeqLabel",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "AlarmSetting",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "SwitchingMode",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "MaxDelay",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "DelayAdjust",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "EVSSetting",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "SequencerSetting",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "TotalDelay",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "KeySwitch",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "Voltage",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "Current",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "Power",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "PowerVA",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "PowerFactor",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "ClearPERBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "ResetBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "AllOffBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "EventsOnBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "SeqOnBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "EventsOffBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "SeqOffBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "FirmwareRevision",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "SerialNumber",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "Model",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "Brand",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "LinkStatus",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "Pushbutton",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "RemoteInput",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "Alarm",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "SMPRelay",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "ExtremeVoltage",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "ProtectStatus",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "SecondaryPER",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "PrimaryPER",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "SeqPosition",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "RevisionDate",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "Bank1OnBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "Bank1OffBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "Bank2OnBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "Bank2OffBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "Bank3OnBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "Bank3OffBtn",
+      ControlType = "Button",
+      ButtonType = "Momentary",
+      UserPin = true,
+      PinStyle = "Input",
+    },
+    {
+      Count = count,
+      Name = "Present",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "EventsEnabled",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "Bank1Status",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "Bank2Status",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "Bank3Status",
+      IndicatorType = "Led",
+      ControlType = "Indicator",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+    {
+      Count = count,
+      Name = "RemoteVoltage",
+      ControlType = "Text",
+      UserPin = true,
+      PinStyle = "Output",
+    },
+  }
+  return controls
+end
+
+function GetPages(props)
+  local pages = { { name = "Global" } }
+  for seq = 0, props["Number of Secondary Sequencers"].Value do
+    table.insert(pages, { name = "Sequencer " .. seq })
+  end
+  table.insert(pages, { name = "Diagnostics" })
+  return pages
+end
+
+function GetControlLayout(props)
+  local count = props["Number of Secondary Sequencers"].Value + 1
+  local page = props["page_index"] and props["page_index"].Value or 1
+  local layout = GetHiddenLayout(count)
+  local pageLayout
+  local graphics
+
+  if page == 1 then
+    pageLayout, graphics = GetGlobalLayout()
+  elseif page <= count + 1 then
+    pageLayout, graphics = GetSequencerLayout(page - 1, count)
+  else
+    pageLayout, graphics = GetDiagnosticsLayout()
+  end
+
+  for name, entry in pairs(pageLayout) do
+    entry.PrettyName = layout[name].PrettyName
+    layout[name] = entry
+  end
+  return layout, graphics
+end
+
+--*** Design-time layout helpers ***
+function LayoutKey(name, index, count)
+  return count == 1 and name or name .. " " .. index
+end
+
+function GetHiddenLayout(count)
+  local layout = {}
+  layout.ConnectionStatus = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Connection Status",
+  }
+  layout.SystemFault = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~System Fault",
+  }
+  layout.EventLog = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Event Log",
+  }
+  layout.DiscoveredCount = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Discovered Units",
+  }
+  layout.HelpResponse = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Help Response",
+  }
+  layout.HelpBtn = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Help",
+  }
+  layout.ReconnectBtn = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Reconnect",
+  }
+  layout.Parity = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Parity",
+  }
+  layout.StopBits = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Stop Bits",
+  }
+  layout.DataBits = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Data Bits",
+  }
+  layout.FlowControl = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Flow Control",
+  }
+  layout.GlobalSeqOff = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Sequence Off",
+  }
+  layout.GlobalEventsOff = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Events Off",
+  }
+  layout.StartBits = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Start Bits",
+  }
+  layout.BaudRate = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Baud Rate",
+  }
+  layout.GlobalReset = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Reset",
+  }
+  layout.GlobalClearPER = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Clear Logs",
+  }
+  layout.RollCallBtn = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Roll Call",
+  }
+  layout.EnumerateBtn = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Enumerate",
+  }
+  layout.GlobalSeqOn = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Sequence On",
+  }
+  layout.GlobalEventsOn = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~Events On",
+  }
+  layout.GlobalAllOff = {
+    Style = "None",
+    Position = { 0, 0 },
+    Size = { 1, 1 },
+    PrettyName = "System~All Off",
+  }
+  for i = 1, count do
+    layout[LayoutKey("SeqLabel", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Sequencer Label",
+    }
+    layout[LayoutKey("AlarmSetting", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Physical Settings~Alarm Setting",
+    }
+    layout[LayoutKey("SwitchingMode", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Physical Settings~Switching Mode",
+    }
+    layout[LayoutKey("MaxDelay", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Physical Settings~Max Delay",
+    }
+    layout[LayoutKey("DelayAdjust", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Physical Settings~Delay Adjust",
+    }
+    layout[LayoutKey("EVSSetting", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Physical Settings~Extreme Voltage",
+    }
+    layout[LayoutKey("SequencerSetting", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Physical Settings~Sequencer Setting",
+    }
+    layout[LayoutKey("TotalDelay", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Physical Settings~Total Delay",
+    }
+    layout[LayoutKey("KeySwitch", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Physical Settings~Key Switch",
+    }
+    layout[LayoutKey("Voltage", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Power~Volts",
+    }
+    layout[LayoutKey("Current", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Power~Amps",
+    }
+    layout[LayoutKey("Power", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Power~Watts",
+    }
+    layout[LayoutKey("PowerVA", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Power~VA Power",
+    }
+    layout[LayoutKey("PowerFactor", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Power~Power Factor",
+    }
+    layout[LayoutKey("ClearPERBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Commands~Clear Logs",
+    }
+    layout[LayoutKey("ResetBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Commands~Reset",
+    }
+    layout[LayoutKey("AllOffBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~All Off",
+    }
+    layout[LayoutKey("EventsOnBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Commands~Events On",
+    }
+    layout[LayoutKey("SeqOnBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Sequence On",
+    }
+    layout[LayoutKey("EventsOffBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Commands~Events Off",
+    }
+    layout[LayoutKey("SeqOffBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Sequence Off",
+    }
+    layout[LayoutKey("FirmwareRevision", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~ID~Firmware Revision",
+    }
+    layout[LayoutKey("SerialNumber", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~ID~Serial Number",
+    }
+    layout[LayoutKey("Model", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~ID~Model",
+    }
+    layout[LayoutKey("Brand", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~ID~Brand",
+    }
+    layout[LayoutKey("LinkStatus", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~Link Status",
+    }
+    layout[LayoutKey("Pushbutton", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~Pushbutton",
+    }
+    layout[LayoutKey("RemoteInput", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~Remote Input",
+    }
+    layout[LayoutKey("Alarm", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~Alarm",
+    }
+    layout[LayoutKey("SMPRelay", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~SMP Relay",
+    }
+    layout[LayoutKey("ExtremeVoltage", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~Extreme Voltage Status",
+    }
+    layout[LayoutKey("ProtectStatus", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~Protect Status",
+    }
+    layout[LayoutKey("SecondaryPER", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~Secondary PER",
+    }
+    layout[LayoutKey("PrimaryPER", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~Primary PER",
+    }
+    layout[LayoutKey("SeqPosition", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~ID~Position",
+    }
+    layout[LayoutKey("RevisionDate", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~ID~Revision Date",
+    }
+    layout[LayoutKey("Bank1OnBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Bank 1~Bank 1 On",
+    }
+    layout[LayoutKey("Bank1OffBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Bank 1~Bank 1 Off",
+    }
+    layout[LayoutKey("Bank2OnBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Bank 2~Bank 2 On",
+    }
+    layout[LayoutKey("Bank2OffBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Bank 2~Bank 2 Off",
+    }
+    layout[LayoutKey("Bank3OnBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Bank 3~Bank 3 On",
+    }
+    layout[LayoutKey("Bank3OffBtn", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Bank 3~Bank 3 Off",
+    }
+    layout[LayoutKey("Present", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~Present",
+    }
+    layout[LayoutKey("EventsEnabled", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~Events Enabled",
+    }
+    layout[LayoutKey("Bank1Status", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Bank 1~Bank 1 Status",
+    }
+    layout[LayoutKey("Bank2Status", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Bank 2~Bank 2 Status",
+    }
+    layout[LayoutKey("Bank3Status", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Bank 3~Bank 3 Status",
+    }
+    layout[LayoutKey("RemoteVoltage", i, count)] = {
+      Style = "None",
+      Position = { 0, 0 },
+      Size = { 1, 1 },
+      PrettyName = "Sequencer " .. (i - 1) .. "~Status~Remote Voltage",
+    }
+  end
+  return layout
+end
+
+-- Global page: direct Q-SYS layout and graphics definitions.
+function GetGlobalLayout()
+  local layout = {}
+  layout.BaudRate = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 215, 20 },
+    ZOrder = 179,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 140, 342 },
+  }
+  layout.ConnectionStatus = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    StrokeWidth = 1,
+    StrokeColor = { 124, 124, 124, 255 },
+    HTextAlign = "Center",
+    TextColor = Black,
+    FontStyle = "Regular",
+    Font = "Roboto",
+    ZOrder = 211,
+    Size = { 300, 40 },
+    Style = "Text",
+    FontSize = 14,
+    Position = { 50, 523 },
+  }
+  layout.DataBits = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 215, 20 },
+    ZOrder = 181,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 140, 392 },
+  }
+  layout.EnumerateBtn = {
+    CornerRadius = 0,
+    Position = { 129, 146 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 194,
+    ButtonStyle = "Momentary",
+  }
+  layout.FlowControl = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 215, 20 },
+    ZOrder = 184,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 140, 467 },
+  }
+  layout.GlobalAllOff = {
+    CornerRadius = 0,
+    Position = { 310, 221 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 201,
+    ButtonStyle = "Momentary",
+  }
+  layout.GlobalClearPER = {
+    CornerRadius = 0,
+    Position = { 129, 221 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 197,
+    ButtonStyle = "Momentary",
+  }
+  layout.GlobalEventsOff = {
+    CornerRadius = 0,
+    Position = { 310, 171 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 207,
+    ButtonStyle = "Momentary",
+  }
+  layout.GlobalEventsOn = {
+    CornerRadius = 0,
+    Position = { 129, 171 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 203,
+    ButtonStyle = "Momentary",
+  }
+  layout.GlobalReset = {
+    CornerRadius = 0,
+    Position = { 310, 246 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 198,
+    ButtonStyle = "Momentary",
+  }
+  layout.GlobalSeqOff = {
+    CornerRadius = 0,
+    Position = { 310, 196 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 208,
+    ButtonStyle = "Momentary",
+  }
+  layout.GlobalSeqOn = {
+    CornerRadius = 0,
+    Position = { 129, 196 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 204,
+    ButtonStyle = "Momentary",
+  }
+  layout.Parity = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 215, 20 },
+    ZOrder = 183,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 140, 442 },
+  }
+  layout.RollCallBtn = {
+    CornerRadius = 0,
+    Position = { 310, 146 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 196,
+    ButtonStyle = "Momentary",
+  }
+  layout.StartBits = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 215, 20 },
+    ZOrder = 180,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 140, 367 },
+  }
+  layout.StopBits = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 215, 20 },
+    ZOrder = 182,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 140, 417 },
+  }
+  local graphics = {
+    {
+      Type = "GroupBox",
+      FontSize = 11,
+      Color = { 51, 51, 51, 255 },
+      StrokeWidth = 0,
+      StrokeColor = Black,
+      HTextAlign = "Center",
+      Size = { 400, 595 },
+      Font = "Roboto",
+      FontStyle = "Regular",
+      Fill = White,
+      ZOrder = -7,
+      Text = "",
+      Position = { 0, 0 },
+    },
+    {
+      Type = "GroupBox",
+      FontSize = 11,
+      Color = { 51, 51, 51, 255 },
+      StrokeWidth = 0,
+      StrokeColor = Black,
+      HTextAlign = "Center",
+      Size = { 390, 267 },
+      Font = "Roboto",
+      FontStyle = "Regular",
+      Fill = GroupBoxGray,
+      ZOrder = -6,
+      Text = "",
+      Position = { 5, 306 },
+    },
+    {
+      Type = "GroupBox",
+      FontSize = 11,
+      Color = { 51, 51, 51, 255 },
+      StrokeWidth = 0,
+      StrokeColor = Black,
+      HTextAlign = "Center",
+      Size = { 400, 80 },
+      Font = "Roboto",
+      FontStyle = "Regular",
+      Fill = GroupBoxGray,
+      ZOrder = -4,
+      Text = "",
+      Position = { 0, 0 },
+    },
+    {
+      Type = "GroupBox",
+      FontSize = 11,
+      Color = { 51, 51, 51, 255 },
+      StrokeWidth = 0,
+      StrokeColor = Black,
+      HTextAlign = "Center",
+      Size = { 390, 166 },
+      Font = "Roboto",
+      FontStyle = "Regular",
+      Fill = GroupBoxGray,
+      ZOrder = -3,
+      Text = "",
+      Position = { 5, 110 },
+    },
+    {
+      Type = "Label",
+      Text = "Version " .. PluginInfo.Version,
+      Color = Black,
+      ZOrder = 90,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 80, 22 },
+      FontStyle = "Medium",
+      FontSize = 10,
+      Position = { 315, 573 },
+    },
+    {
+      Type = "Label",
+      Text = "Global Commands",
+      Color = Black,
+      ZOrder = 91,
+      HTextAlign = "Left",
+      Font = "Roboto",
+      Size = { 390, 30 },
+      FontStyle = "Medium",
+      FontSize = 20,
+      Position = { 5, 80 },
+    },
+    {
+      Type = "Header",
+      Text = "Connection Status",
+      Color = Black,
+      ZOrder = 162,
+      HTextAlign = "Center",
+      Font = "Roboto",
+      Size = { 330, 16 },
+      FontStyle = "Regular",
+      FontSize = 14,
+      Position = { 35, 497 },
+    },
+    {
+      Type = "Label",
+      Text = "Baud Rate:",
+      Color = Black,
+      ZOrder = 168,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 85, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 50, 342 },
+    },
+    {
+      Type = "Label",
+      Text = "Data Bits:",
+      Color = Black,
+      ZOrder = 169,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 85, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 50, 392 },
+    },
+    {
+      Type = "Label",
+      Text = "Parity:",
+      Color = Black,
+      ZOrder = 170,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 85, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 50, 442 },
+    },
+    {
+      Type = "Label",
+      Text = "Stop Bits:",
+      Color = Black,
+      ZOrder = 171,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 85, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 50, 417 },
+    },
+    {
+      Type = "Label",
+      Text = "Flow Control:",
+      Color = Black,
+      ZOrder = 172,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 85, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 50, 467 },
+    },
+    {
+      Type = "Label",
+      Text = "Start Bits:",
+      Color = Black,
+      ZOrder = 177,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 85, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 50, 367 },
+    },
+    {
+      Type = "Header",
+      Text = "Connection Details",
+      Color = Black,
+      ZOrder = 185,
+      HTextAlign = "Center",
+      Font = "Roboto",
+      Size = { 330, 16 },
+      FontStyle = "Regular",
+      FontSize = 14,
+      Position = { 35, 316 },
+    },
+    {
+      Type = "Header",
+      Text = "Commands",
+      Color = Black,
+      ZOrder = 186,
+      HTextAlign = "Center",
+      Font = "Roboto",
+      Size = { 330, 16 },
+      FontStyle = "Regular",
+      FontSize = 14,
+      Position = { 35, 120 },
+    },
+    {
+      Type = "Label",
+      Text = "Enumerate:",
+      Color = Black,
+      ZOrder = 187,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 85, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 39, 146 },
+    },
+    {
+      Type = "Label",
+      Text = "Rollcall:",
+      Color = Black,
+      ZOrder = 188,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 215, 146 },
+    },
+    {
+      Type = "Label",
+      Text = "Clear Logs:",
+      Color = Black,
+      ZOrder = 189,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 85, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 39, 221 },
+    },
+    {
+      Type = "Label",
+      Text = "Reset:",
+      Color = Black,
+      ZOrder = 190,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 215, 246 },
+    },
+    {
+      Type = "Label",
+      Text = "Events On:",
+      Color = Black,
+      ZOrder = 191,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 85, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 39, 171 },
+    },
+    {
+      Type = "Label",
+      Text = "Sequence On:",
+      Color = Black,
+      ZOrder = 192,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 85, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 39, 196 },
+    },
+    {
+      Type = "Label",
+      Text = "All Off:",
+      Color = Black,
+      ZOrder = 193,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 215, 221 },
+    },
+    {
+      Type = "Label",
+      Text = "Events Off:",
+      Color = Black,
+      ZOrder = 205,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 215, 171 },
+    },
+    {
+      Type = "Label",
+      Text = "Sequence Off:",
+      Color = Black,
+      ZOrder = 206,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 215, 196 },
+    },
+    {
+      Type = "Label",
+      Text = "Connection",
+      Color = Black,
+      ZOrder = 209,
+      HTextAlign = "Left",
+      Font = "Roboto",
+      Size = { 390, 30 },
+      FontStyle = "Medium",
+      FontSize = 20,
+      Position = { 5, 276 },
+    },
+    {
+      Type = "Svg",
+      Position = { 25, 12 },
+      ZOrder = 10000,
+      Size = { 350, 56 },
+      Image = LogoSvg,
+    },
+  }
+  return layout, graphics
+end
+
+-- Sequencer page: direct Q-SYS layout and graphics definitions.
+function GetSequencerLayout(index, count)
+  local layout = {}
+  layout[LayoutKey("Alarm", index, count)] = {
+    CornerRadius = 0,
+    Color = { 223, 0, 36, 255 },
+    StrokeWidth = 1,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    TextColor = Black,
+    FontStyle = "Regular",
+    Font = "Roboto",
+    ZOrder = 172,
+    Size = { 20, 20 },
+    Style = "Led",
+    FontSize = 9,
+    Position = { 160, 688 },
+  }
+  layout[LayoutKey("AlarmSetting", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 191,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 150, 934 },
+  }
+  layout[LayoutKey("AllOffBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 315, 196 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 64,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("Bank1OffBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 315, 221 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 74,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("Bank1OnBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 135, 221 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 72,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("Bank2OffBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 315, 246 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 78,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("Bank2OnBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 135, 246 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 76,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("Bank3OffBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 315, 271 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 82,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("Bank3OnBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 135, 271 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 80,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("Brand", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 185, 20 },
+    ZOrder = 160,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 170, 392 },
+  }
+  layout[LayoutKey("ClearPERBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 135, 196 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 62,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("Current", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 51,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 315, 638 },
+  }
+  layout[LayoutKey("DelayAdjust", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 188,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 150, 859 },
+  }
+  layout[LayoutKey("EVSSetting", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 187,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 315, 934 },
+  }
+  layout[LayoutKey("EventsOffBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 315, 146 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 69,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("EventsOnBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 135, 146 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 65,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("ExtremeVoltage", index, count)] = {
+    CornerRadius = 0,
+    Color = { 223, 0, 36, 255 },
+    StrokeWidth = 1,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    TextColor = Black,
+    FontStyle = "Regular",
+    Font = "Roboto",
+    ZOrder = 170,
+    Size = { 20, 20 },
+    Style = "Led",
+    FontSize = 9,
+    Position = { 160, 638 },
+  }
+  layout[LayoutKey("FirmwareRevision", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 185, 20 },
+    ZOrder = 163,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 170, 467 },
+  }
+  layout[LayoutKey("KeySwitch", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 184,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 315, 859 },
+  }
+  -- SECLINK true means OK; blue is reserved for initialization.
+  layout[LayoutKey("LinkStatus", index, count)] = {
+    CornerRadius = 0,
+    Color = IndicatorGreen,
+    StrokeWidth = 1,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    TextColor = Black,
+    FontStyle = "Regular",
+    Font = "Roboto",
+    ZOrder = 175,
+    Size = { 20, 20 },
+    Style = "Led",
+    FontSize = 9,
+    Position = { 160, 763 },
+  }
+  layout[LayoutKey("MaxDelay", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 189,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 150, 884 },
+  }
+  layout[LayoutKey("Model", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 185, 20 },
+    ZOrder = 161,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 170, 417 },
+  }
+  layout[LayoutKey("Power", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 52,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 315, 663 },
+  }
+  layout[LayoutKey("PowerFactor", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 54,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 315, 713 },
+  }
+  layout[LayoutKey("PowerVA", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 53,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 315, 688 },
+  }
+  layout[LayoutKey("PrimaryPER", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 167,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 315, 738 },
+  }
+  layout[LayoutKey("ProtectStatus", index, count)] = {
+    CornerRadius = 0,
+    Color = { 0, 159, 60, 255 },
+    StrokeWidth = 1,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    TextColor = Black,
+    FontStyle = "Regular",
+    Font = "Roboto",
+    ZOrder = 169,
+    Size = { 20, 20 },
+    Style = "Led",
+    FontSize = 9,
+    Position = { 160, 613 },
+  }
+  layout[LayoutKey("Pushbutton", index, count)] = {
+    CornerRadius = 0,
+    Color = { 230, 171, 56, 255 },
+    StrokeWidth = 1,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    TextColor = Black,
+    FontStyle = "Regular",
+    Font = "Roboto",
+    ZOrder = 174,
+    Size = { 20, 20 },
+    Style = "Led",
+    FontSize = 9,
+    Position = { 160, 738 },
+  }
+  layout[LayoutKey("RemoteInput", index, count)] = {
+    CornerRadius = 0,
+    Color = { 0, 159, 60, 255 },
+    StrokeWidth = 1,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    TextColor = Black,
+    FontStyle = "Regular",
+    Font = "Roboto",
+    ZOrder = 173,
+    Size = { 20, 20 },
+    Style = "Led",
+    FontSize = 9,
+    Position = { 160, 713 },
+  }
+  layout[LayoutKey("ResetBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 315, 296 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 63,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("RevisionDate", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 185, 20 },
+    ZOrder = 164,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 170, 492 },
+  }
+  layout[LayoutKey("SMPRelay", index, count)] = {
+    CornerRadius = 0,
+    Color = { 230, 171, 56, 255 },
+    StrokeWidth = 1,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    TextColor = Black,
+    FontStyle = "Regular",
+    Font = "Roboto",
+    ZOrder = 171,
+    Size = { 20, 20 },
+    Style = "Led",
+    FontSize = 9,
+    Position = { 160, 663 },
+  }
+  layout[LayoutKey("SecondaryPER", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 168,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 315, 763 },
+  }
+  layout[LayoutKey("SeqOffBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 315, 171 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 70,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("SeqOnBtn", index, count)] = {
+    CornerRadius = 0,
+    Position = { 135, 171 },
+    StrokeColor = { 105, 105, 105, 255 },
+    Style = "Button",
+    Color = White,
+    Legend = "",
+    HTextAlign = "Center",
+    Size = { 45, 20 },
+    TextColor = Black,
+    FontSize = 9,
+    Font = "Roboto",
+    StrokeWidth = 1,
+    ButtonVisualStyle = "Gloss",
+    FontStyle = "Regular",
+    ZOrder = 66,
+    ButtonStyle = "Momentary",
+  }
+  layout[LayoutKey("SeqPosition", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 185, 20 },
+    ZOrder = 165,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 170, 517 },
+  }
+  layout[LayoutKey("SequencerSetting", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 186,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 315, 909 },
+  }
+  layout[LayoutKey("SerialNumber", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 185, 20 },
+    ZOrder = 162,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 170, 442 },
+  }
+  layout[LayoutKey("SwitchingMode", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 190,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 150, 909 },
+  }
+  layout[LayoutKey("TotalDelay", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 185,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 315, 884 },
+  }
+  layout[LayoutKey("Voltage", index, count)] = {
+    CornerRadius = 0,
+    Color = ReadoutGray,
+    IsReadOnly = true,
+    StrokeColor = { 105, 105, 105, 255 },
+    HTextAlign = "Center",
+    FontStyle = "Regular",
+    TextColor = Black,
+    StrokeWidth = 1,
+    Font = "Roboto",
+    Size = { 45, 20 },
+    ZOrder = 50,
+    Style = "Text",
+    FontSize = 11,
+    Position = { 315, 613 },
+  }
+  local graphics = {
+    {
+      Type = "GroupBox",
+      FontSize = 11,
+      Color = { 51, 51, 51, 255 },
+      StrokeWidth = 0,
+      StrokeColor = Black,
+      HTextAlign = "Center",
+      Size = { 400, 986 },
+      Font = "Roboto",
+      FontStyle = "Regular",
+      Fill = White,
+      ZOrder = -5,
+      Text = "",
+      Position = { 0, 0 },
+    },
+    {
+      Type = "GroupBox",
+      FontSize = 11,
+      Color = { 51, 51, 51, 255 },
+      StrokeWidth = 0,
+      StrokeColor = Black,
+      HTextAlign = "Center",
+      Size = { 390, 141 },
+      Font = "Roboto",
+      FontStyle = "Regular",
+      Fill = GroupBoxGray,
+      ZOrder = -4,
+      Text = "",
+      Position = { 5, 823 },
+    },
+    {
+      Type = "GroupBox",
+      FontSize = 11,
+      Color = { 51, 51, 51, 255 },
+      StrokeWidth = 0,
+      StrokeColor = Black,
+      HTextAlign = "Center",
+      Size = { 390, 216 },
+      Font = "Roboto",
+      FontStyle = "Regular",
+      Fill = GroupBoxGray,
+      ZOrder = -2,
+      Text = "",
+      Position = { 5, 577 },
+    },
+    {
+      Type = "GroupBox",
+      FontSize = 11,
+      Color = { 51, 51, 51, 255 },
+      StrokeWidth = 0,
+      StrokeColor = Black,
+      HTextAlign = "Center",
+      Size = { 390, 191 },
+      Font = "Roboto",
+      FontStyle = "Regular",
+      Fill = GroupBoxGray,
+      ZOrder = 0,
+      Text = "",
+      Position = { 5, 356 },
+    },
+    {
+      Type = "GroupBox",
+      FontSize = 11,
+      Color = { 51, 51, 51, 255 },
+      StrokeWidth = 0,
+      StrokeColor = Black,
+      HTextAlign = "Center",
+      Size = { 400, 80 },
+      Font = "Roboto",
+      FontStyle = "Regular",
+      Fill = GroupBoxGray,
+      ZOrder = 2,
+      Text = "",
+      Position = { 0, 0 },
+    },
+    {
+      Type = "GroupBox",
+      FontSize = 11,
+      Color = { 51, 51, 51, 255 },
+      StrokeWidth = 0,
+      StrokeColor = Black,
+      HTextAlign = "Center",
+      Size = { 390, 216 },
+      Font = "Roboto",
+      FontStyle = "Regular",
+      Fill = GroupBoxGray,
+      ZOrder = 3,
+      Text = "",
+      Position = { 5, 110 },
+    },
+    {
+      Type = "Label",
+      Text = "Version " .. PluginInfo.Version,
+      Color = Black,
+      ZOrder = 5,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 80, 22 },
+      FontStyle = "Medium",
+      FontSize = 10,
+      Position = { 315, 964 },
+    },
+    {
+      Type = "Label",
+      Text = "Device Commands",
+      Color = Black,
+      ZOrder = 6,
+      HTextAlign = "Left",
+      Font = "Roboto",
+      Size = { 390, 30 },
+      FontStyle = "Medium",
+      FontSize = 20,
+      Position = { 5, 80 },
+    },
+    {
+      Type = "Label",
+      Text = "Delay Adjustment:",
+      Color = { 51, 51, 51, 255 },
+      ZOrder = 19,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 35, 859 },
+    },
+    {
+      Type = "Label",
+      Text = "Max Delay:",
+      Color = { 51, 51, 51, 255 },
+      ZOrder = 20,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 35, 884 },
+    },
+    {
+      Type = "Label",
+      Text = "Switching Mode:",
+      Color = { 51, 51, 51, 255 },
+      ZOrder = 21,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 35, 909 },
+    },
+    {
+      Type = "Label",
+      Text = "Extreme Voltage:",
+      Color = { 51, 51, 51, 255 },
+      ZOrder = 22,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 200, 934 },
+    },
+    {
+      Type = "Label",
+      Text = "Sequencer:",
+      Color = { 51, 51, 51, 255 },
+      ZOrder = 25,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 200, 909 },
+    },
+    {
+      Type = "Label",
+      Text = "Key Switch:",
+      Color = { 51, 51, 51, 255 },
+      ZOrder = 26,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 200, 859 },
+    },
+    {
+      Type = "Label",
+      Text = "AC Voltage (V):",
+      Color = Black,
+      ZOrder = 45,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 200, 613 },
+    },
+    {
+      Type = "Label",
+      Text = "RMS Power (W):",
+      Color = Black,
+      ZOrder = 46,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 200, 663 },
+    },
+    {
+      Type = "Label",
+      Text = "Power Factor:",
+      Color = Black,
+      ZOrder = 47,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 200, 713 },
+    },
+    {
+      Type = "Label",
+      Text = "VA Power:",
+      Color = Black,
+      ZOrder = 48,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 200, 688 },
+    },
+    {
+      Type = "Label",
+      Text = "AC Current (A):",
+      Color = Black,
+      ZOrder = 49,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 200, 638 },
+    },
+    {
+      Type = "Header",
+      Text = "Commands",
+      Color = Black,
+      ZOrder = 55,
+      HTextAlign = "Center",
+      Font = "Roboto",
+      Size = { 330, 16 },
+      FontStyle = "Regular",
+      FontSize = 14,
+      Position = { 35, 120 },
+    },
+    {
+      Type = "Header",
+      Text = "Measurements",
+      Color = Black,
+      ZOrder = 56,
+      HTextAlign = "Center",
+      Font = "Roboto",
+      Size = { 170, 16 },
+      FontStyle = "Regular",
+      FontSize = 14,
+      Position = { 195, 587 },
+    },
+    {
+      Type = "Label",
+      Text = "Clear Logs:",
+      Color = Black,
+      ZOrder = 57,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 196 },
+    },
+    {
+      Type = "Label",
+      Text = "Reset:",
+      Color = Black,
+      ZOrder = 58,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 220, 296 },
+    },
+    {
+      Type = "Label",
+      Text = "Events On:",
+      Color = Black,
+      ZOrder = 59,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 146 },
+    },
+    {
+      Type = "Label",
+      Text = "Sequence On:",
+      Color = Black,
+      ZOrder = 60,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 171 },
+    },
+    {
+      Type = "Label",
+      Text = "All Off:",
+      Color = Black,
+      ZOrder = 61,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 220, 196 },
+    },
+    {
+      Type = "Label",
+      Text = "Events Off:",
+      Color = Black,
+      ZOrder = 67,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 220, 146 },
+    },
+    {
+      Type = "Label",
+      Text = "Sequence Off:",
+      Color = Black,
+      ZOrder = 68,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 220, 171 },
+    },
+    {
+      Type = "Label",
+      Text = "Bank 1 On:",
+      Color = Black,
+      ZOrder = 71,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 221 },
+    },
+    {
+      Type = "Label",
+      Text = "Bank 1 Off:",
+      Color = Black,
+      ZOrder = 73,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 220, 221 },
+    },
+    {
+      Type = "Label",
+      Text = "Bank 2 On:",
+      Color = Black,
+      ZOrder = 75,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 246 },
+    },
+    {
+      Type = "Label",
+      Text = "Bank 2 Off:",
+      Color = Black,
+      ZOrder = 77,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 220, 246 },
+    },
+    {
+      Type = "Label",
+      Text = "Bank 3 On:",
+      Color = Black,
+      ZOrder = 79,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 271 },
+    },
+    {
+      Type = "Label",
+      Text = "Bank 3 Off:",
+      Color = Black,
+      ZOrder = 81,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 90, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 220, 271 },
+    },
+    {
+      Type = "Header",
+      Text = "Status",
+      Color = Black,
+      ZOrder = 83,
+      HTextAlign = "Center",
+      Font = "Roboto",
+      Size = { 150, 16 },
+      FontStyle = "Regular",
+      FontSize = 14,
+      Position = { 35, 587 },
+    },
+    {
+      Type = "Label",
+      Text = "Protection OK:",
+      Color = Black,
+      ZOrder = 84,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 613 },
+    },
+    {
+      Type = "Label",
+      Text = "SMP Relay:",
+      Color = Black,
+      ZOrder = 85,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 663 },
+    },
+    {
+      Type = "Label",
+      Text = "Remote Input:",
+      Color = Black,
+      ZOrder = 86,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 713 },
+    },
+    {
+      Type = "Label",
+      Text = "Alarm:",
+      Color = Black,
+      ZOrder = 87,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 688 },
+    },
+    {
+      Type = "Label",
+      Text = "Extreme Voltage:",
+      Color = Black,
+      ZOrder = 88,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 638 },
+    },
+    {
+      Type = "Label",
+      Text = "Pushbutton:",
+      Color = Black,
+      ZOrder = 89,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 738 },
+    },
+    {
+      Type = "Label",
+      Text = "Secondary Link:",
+      Color = Black,
+      ZOrder = 90,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 40, 763 },
+    },
+    {
+      Type = "Label",
+      Text = "% Secondary Log:",
+      Color = Black,
+      ZOrder = 91,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 200, 763 },
+    },
+    {
+      Type = "Label",
+      Text = "% Primary Log:",
+      Color = Black,
+      ZOrder = 92,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 200, 738 },
+    },
+    {
+      Type = "Label",
+      Text = "Brand:",
+      Color = Black,
+      ZOrder = 154,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 120, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 45, 392 },
+    },
+    {
+      Type = "Label",
+      Text = "Serial Number:",
+      Color = Black,
+      ZOrder = 155,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 120, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 45, 442 },
+    },
+    {
+      Type = "Label",
+      Text = "Rev Date:",
+      Color = Black,
+      ZOrder = 156,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 120, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 45, 492 },
+    },
+    {
+      Type = "Label",
+      Text = "Firmware Revision:",
+      Color = Black,
+      ZOrder = 157,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 120, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 45, 467 },
+    },
+    {
+      Type = "Label",
+      Text = "Position:",
+      Color = Black,
+      ZOrder = 158,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 120, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 45, 517 },
+    },
+    {
+      Type = "Label",
+      Text = "Model:",
+      Color = Black,
+      ZOrder = 159,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 120, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 45, 417 },
+    },
+    {
+      Type = "Header",
+      Text = "ID",
+      Color = Black,
+      ZOrder = 166,
+      HTextAlign = "Center",
+      Font = "Roboto",
+      Size = { 330, 16 },
+      FontStyle = "Regular",
+      FontSize = 14,
+      Position = { 35, 366 },
+    },
+    {
+      Type = "Header",
+      Text = "Physical Settings",
+      Color = Black,
+      ZOrder = 176,
+      HTextAlign = "Center",
+      Font = "Roboto",
+      Size = { 330, 16 },
+      FontStyle = "Regular",
+      FontSize = 14,
+      Position = { 35, 833 },
+    },
+    {
+      Type = "Label",
+      Text = "Device ID",
+      Color = Black,
+      ZOrder = 177,
+      HTextAlign = "Left",
+      Font = "Roboto",
+      Size = { 390, 30 },
+      FontStyle = "Medium",
+      FontSize = 20,
+      Position = { 5, 326 },
+    },
+    {
+      Type = "Label",
+      Text = "Device Status / Measurements",
+      Color = Black,
+      ZOrder = 179,
+      HTextAlign = "Left",
+      Font = "Roboto",
+      Size = { 390, 30 },
+      FontStyle = "Medium",
+      FontSize = 20,
+      Position = { 5, 547 },
+    },
+    {
+      Type = "Label",
+      Text = "Device Physical Settings",
+      Color = Black,
+      ZOrder = 181,
+      HTextAlign = "Left",
+      Font = "Roboto",
+      Size = { 390, 30 },
+      FontStyle = "Medium",
+      FontSize = 20,
+      Position = { 10, 793 },
+    },
+    {
+      Type = "Label",
+      Text = "Total Delay:",
+      Color = { 51, 51, 51, 255 },
+      ZOrder = 182,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 200, 884 },
+    },
+    {
+      Type = "Label",
+      Text = "Alarm:",
+      Color = { 51, 51, 51, 255 },
+      ZOrder = 183,
+      HTextAlign = "Right",
+      Font = "Roboto",
+      Size = { 110, 20 },
+      FontStyle = "Regular",
+      FontSize = 13,
+      Position = { 35, 934 },
+    },
+    {
+      Type = "Svg",
+      Position = { 25, 12 },
+      ZOrder = 10000,
+      Size = { 350, 56 },
+      Image = LogoSvg,
+    },
+  }
+  return layout, graphics
+end
+
+-- Diagnostics page: direct Q-SYS layout and graphics definitions.
+function GetDiagnosticsLayout()
+  local layout = {}
+  layout.DiscoveredCount = {
+    FontSize = 11,
+    Color = { 194, 194, 194 },
+    Position = { 10, 145 },
+    StrokeColor = { 128, 128, 128 },
+    TextColor = { 0, 0, 0 },
+    Font = "Roboto",
+    IsReadOnly = true,
+    WordWrap = true,
+    Style = "Text",
+    StrokeWidth = 1,
+    Size = { 380, 40 },
+  }
+  layout.EventLog = {
+    FontSize = 11,
+    Color = { 194, 194, 194 },
+    Position = { 10, 284 },
+    StrokeColor = { 128, 128, 128 },
+    TextColor = { 0, 0, 0 },
+    Font = "Roboto",
+    IsReadOnly = true,
+    WordWrap = true,
+    Style = "Text",
+    StrokeWidth = 1,
+    Size = { 380, 116 },
+  }
+  layout.HelpBtn = {
+    FontSize = 11,
+    Color = { 194, 194, 194 },
+    Position = { 35, 225 },
+    StrokeColor = { 128, 128, 128 },
+    TextColor = { 0, 0, 0 },
+    Font = "Roboto",
+    Legend = "Help",
+    ButtonStyle = "Momentary",
+    Style = "Button",
+    StrokeWidth = 1,
+    Size = { 120, 22 },
+  }
+  layout.HelpResponse = {
+    FontSize = 11,
+    Color = { 194, 194, 194 },
+    Position = { 10, 436 },
+    StrokeColor = { 128, 128, 128 },
+    TextColor = { 0, 0, 0 },
+    Font = "Roboto",
+    IsReadOnly = true,
+    WordWrap = true,
+    Style = "Text",
+    StrokeWidth = 1,
+    Size = { 380, 125 },
+  }
+  layout.ReconnectBtn = {
+    FontSize = 11,
+    Color = { 194, 194, 194 },
+    Position = { 200, 225 },
+    StrokeColor = { 128, 128, 128 },
+    TextColor = { 0, 0, 0 },
+    Font = "Roboto",
+    Legend = "Reconnect",
+    ButtonStyle = "Momentary",
+    Style = "Button",
+    StrokeWidth = 1,
+    Size = { 165, 22 },
+  }
+  layout.SystemFault = {
+    FontSize = 11,
+    Color = { 223, 0, 36 },
+    Position = { 175, 195 },
+    StrokeColor = { 128, 128, 128 },
+    TextColor = { 0, 0, 0 },
+    Font = "Roboto",
+    Style = "Led",
+    StrokeWidth = 1,
+    Size = { 20, 20 },
+  }
+  local graphics = {
+    {
+      Type = "GroupBox",
+      Position = { 0, 0 },
+      Fill = { 255, 255, 255 },
+      ZOrder = -100,
+      StrokeWidth = 0,
+      Size = { 400, 595 },
+    },
+    {
+      Type = "GroupBox",
+      Position = { 0, 0 },
+      Fill = { 230, 230, 230 },
+      ZOrder = -90,
+      StrokeWidth = 0,
+      Size = { 400, 80 },
+    },
+    {
+      Type = "Label",
+      Text = "Diagnostics",
+      Font = "Roboto",
+      FontStyle = "Medium",
+      Position = { 5, 80 },
+      FontSize = 20,
+      HTextAlign = "Left",
+      Size = { 390, 30 },
+    },
+    {
+      Type = "Header",
+      Text = "Connection / Discovery",
+      Position = { 35, 120 },
+      FontSize = 14,
+      Size = { 330, 16 },
+    },
+    {
+      Type = "Label",
+      Text = "System Fault",
+      Position = { 35, 195 },
+      FontSize = 13,
+      HTextAlign = "Right",
+      Size = { 130, 20 },
+    },
+    {
+      Type = "Header",
+      Text = "Event Log",
+      Position = { 35, 258 },
+      FontSize = 14,
+      Size = { 330, 16 },
+    },
+    {
+      Type = "Header",
+      Text = "Help Response",
+      Position = { 35, 410 },
+      FontSize = 14,
+      Size = { 330, 16 },
+    },
+    {
+      Type = "Label",
+      Text = "Version " .. PluginInfo.Version,
+      Position = { 285, 573 },
+      FontSize = 10,
+      HTextAlign = "Right",
+      Size = { 110, 22 },
+    },
+    {
+      Type = "Svg",
+      Position = { 25, 12 },
+      ZOrder = 10000,
+      Size = { 350, 56 },
+      Image = LogoSvg,
+    },
+  }
+  return layout, graphics
+end
+
+if Controls then
+  --*** Control aliases ***
+  Status = Controls.ConnectionStatus
+  EventLog = Controls.EventLog
+
+  --*** Configuration and runtime variables ***
+  MaxUnits = Properties["Number of Secondary Sequencers"].Value + 1
+  DebugMode = Properties["Debug Print"].Value
+  AutoEvents = Properties["Auto-Enable Events"].Value
+  Pending = nil
+  RxBuffer = ""
+  DiscoveryInvalid = false
+  Pumping = false
+  Recovering = false
+  Tick = 0
+  QueryRejected = false
+  RecoveryRequiresReconnect = false
+  SystemStatusKnown = false
+
+  --*** Runtime objects and tables ***
+  SerialPort = SerialPorts and SerialPorts[1]
+  PollTimer = Timer.New()
+  CommandTimer = Timer.New()
+  RecoveryTimer = Timer.New()
+  OpenTimer = Timer.New()
+  Queue = {}
+  ResponseLines = {}
+  Devices = {}
+  Discovery = {}
+  FeedbackValid = {}
+  FeedbackTypes = {}
+
+  --*** Protocol constants ***
+  ResponseTimeout = 5
+  DiscoveryTimeout = 30
+  SequenceTimeoutMargin = 30
+  MaximumBankDelay = 420
+  RecoveryDelay = 3
+  ResetDelay = 5
+  SerialOpenDelay = 1
+  CommandBufferSize = 32
+  QueueCapacityPerUnit = 16
+  ResponseLineLimit = 256
+  ResponseByteLimit = 32768
+  EventLogLimit = 6000
+
+  KeyFields = {
+    VOLTAGE = "Voltage",
+    CURRENT = "Current",
+    WATTS = "Power",
+    VA = "PowerVA",
+    PF = "PowerFactor",
+    SEQ = "SeqPosition",
+    ["UART0 PER"] = "PrimaryPER",
+    ["UART1 PER"] = "SecondaryPER",
+    ["POT ADJ"] = "DelayAdjust",
+    ["DIP MAX DELAY"] = "MaxDelay",
+    ["TOTAL DELAY"] = "TotalDelay",
+    ["DIP MODE"] = "SwitchingMode",
+    ["DIP SEQ"] = "SequencerSetting",
+    ["DIP ALARM"] = "AlarmSetting",
+    ["DIP EVS"] = "EVSSetting",
+    KEY = "KeySwitch",
+    REMOTE = "RemoteVoltage",
+  }
+  LedKeys = {
+    PROTECT = "ProtectStatus",
+    EVS = "ExtremeVoltage",
+    ["SMP RLY"] = "SMPRelay",
+    ALARM = "Alarm",
+    PUSHBUTTON = "Pushbutton",
+    SECLINK = "LinkStatus",
+    BANK1 = "Bank1Status",
+    BANK2 = "Bank2Status",
+    BANK3 = "Bank3Status",
+  }
+
+  -- Debug flags follow the Generic Display pattern.
+  DebugTx = false
+  DebugRx = false
+  DebugFunction = false
+
+  --*** Runtime functions ***
+  function SetupDebugPrint()
+    DebugTx = DebugMode == "Tx" or DebugMode == "Tx/Rx" or DebugMode == "All"
+    DebugRx = DebugMode == "Rx" or DebugMode == "Tx/Rx" or DebugMode == "All"
+    DebugFunction = DebugMode == "Function Calls" or DebugMode == "All"
+  end
+
+  function ReportStatus(value, text)
+    if value ~= Status.Value or text ~= Status.String then
+      print("Furman: " .. text)
+    end
+    Status.Value = value
+    Status.String = text
+  end
+  function Log(text)
+    local previous = EventLog.String or ""
+    EventLog.String = (text .. "\n" .. previous):sub(1, EventLogLimit)
+    if DebugMode ~= "None" then
+      print(text)
+    end
+  end
+  function SeqControl(name, index)
+    return MaxUnits == 1 and Controls[name] or Controls[name][index]
+  end
+  function SetFeedbackAvailable(name, index, available)
+    local control = SeqControl(name, index)
+    FeedbackValid[index] = FeedbackValid[index] or {}
+    FeedbackValid[index][name] = available
+    control.IsDisabled = not available
+    if not available then
+      if FeedbackTypes[name] == "Text" then
+        control.String = ""
+      else
+        control.Boolean = false
+      end
+    end
+  end
+
+  function UpdateControlAvailability()
+    local unavailable = not SerialPort or not SerialPort.IsOpen or Recovering
+    for _, field in ipairs(SequencerFields) do
+      if field.kind == "Button" then
+        for i = 1, MaxUnits do
+          SeqControl(field.name, i).IsDisabled = unavailable or not Devices[i - 1]
+        end
+      else
+        for i = 1, MaxUnits do
+          local valid = FeedbackValid[i] and FeedbackValid[i][field.name]
+          SeqControl(field.name, i).IsDisabled = not valid
+        end
+      end
+    end
+    for _, field in ipairs(GlobalFields) do
+      if field.kind == "Button" and field.name ~= "ReconnectBtn" then
+        local needsDevices = field.name:match("^Global") ~= nil
+        Controls[field.name].IsDisabled = unavailable or (needsDevices and next(Devices) == nil)
+      end
+    end
+  end
+  function RefreshFault()
+    local fault = false
+    local unknown = next(Devices) == nil
+    for seq, device in pairs(Devices) do
+      local i = seq + 1
+      if not device.status then
+        unknown = true
+      else
+        if
+          not SeqControl("ProtectStatus", i).Boolean
+          or SeqControl("ExtremeVoltage", i).Boolean
+          or SeqControl("Alarm", i).Boolean
+        then
+          fault = true
+        end
+        if not device.last and not SeqControl("LinkStatus", i).Boolean then
+          fault = true
+        end
+      end
+    end
+    SystemStatusKnown = not unknown
+    Controls.SystemFault.Boolean = fault
+    Controls.SystemFault.IsDisabled = unknown
+  end
+  function UpdateDiscoverySummary()
+    local count = 0
+    for _ in pairs(Devices) do
+      count = count + 1
+    end
+    Controls.DiscoveredCount.String =
+      string.format("Configured: %d; responding: %d", MaxUnits, count)
+    UpdateControlAvailability()
+  end
+  function ClearFeedback()
+    if DebugFunction then
+      print("ClearFeedback() Called")
+    end
+    Devices = {}
+    for i = 1, MaxUnits do
+      for _, field in ipairs(SequencerFields) do
+        local control = SeqControl(field.name, i)
+        if field.kind == "Text" then
+          control.String = ""
+        elseif field.kind == "Led" then
+          control.Boolean = false
+        end
+        if field.kind ~= "Button" then
+          SetFeedbackAvailable(field.name, i, false)
+        end
+        if field.kind == "Button" then
+          control.IsDisabled = true
+        end
+      end
+    end
+    RefreshFault()
+    UpdateDiscoverySummary()
+  end
+  function GetResponseTimeout(command)
+    if command == "!ENUMERATE" or command == "?ROLLCALL" then
+      return DiscoveryTimeout
+    end
+    if command:match("^!SEQ_O") then
+      local seq = tonumber(command:match(" (%d+)$"))
+      local seconds = SequenceTimeoutMargin
+      for id, device in pairs(Devices) do
+        if seq == nil or id == seq then
+          seconds = seconds + 3 * (device.delay or MaximumBankDelay)
+        end
+      end
+      return seconds
+    end
+    return ResponseTimeout
+  end
+  function ServiceQueue()
+    if
+      Pending
+      or Pumping
+      or Recovering
+      or not SerialPort
+      or not SerialPort.IsOpen
+      or #Queue == 0
+    then
+      return
+    end
+    local item = table.remove(Queue, 1)
+    Pending = item
+    ResponseLines = {}
+    QueryRejected = false
+    if item.command == "!ENUMERATE" or item.command == "?ROLLCALL" then
+      Discovery = {}
+      DiscoveryInvalid = false
+    end
+    if DebugTx then
+      print("TX: " .. item.command)
+    end
+    local ok, err = pcall(function()
+      return SerialPort:Write(item.command .. "\r")
+    end)
+    if not ok or err then
+      Pending = nil
+      Queue = {}
+      ReportStatus(2, "Serial write failed")
+      Log(tostring(err))
+      ClearFeedback()
+      return
+    end
+    CommandTimer:Start(GetResponseTimeout(item.command))
+  end
+  function Enqueue(command)
+    if Recovering then
+      return
+    end
+    if not SerialPort or not SerialPort.IsOpen then
+      Log("Serial port unavailable")
+      return
+    end
+    if #command >= CommandBufferSize then
+      Log("Rejected command exceeds Furman receive buffer")
+      return
+    end
+    if command:sub(1, 1) == "?" then
+      if Pending and Pending.command == command then
+        return
+      end
+      for _, item in ipairs(Queue) do
+        if item.command == command then
+          return
+        end
+      end
+    end
+    if #Queue >= MaxUnits * QueueCapacityPerUnit then
+      Log("Command queue full")
+      return
+    end
+    Queue[#Queue + 1] = {
+      command = command,
+      query = command:sub(1, 1) == "?",
+      seq = tonumber(command:match(" (%d+)")),
+    }
+    ServiceQueue()
+  end
+  function QueryDevice(seq, full)
+    if DebugFunction then
+      print("QueryDevice() Called")
+    end
+    if not Devices[seq] then
+      return
+    end
+    for _, command in ipairs({
+      "STATUS",
+      "SETTINGS",
+      "VOLTAGE",
+      "CURRENT",
+      "POWER",
+      "POWER_VA",
+      "PF",
+    }) do
+      Enqueue("?" .. command .. " " .. seq)
+    end
+    if full then
+      Enqueue("?ID " .. seq)
+      Enqueue("?BANK_STAT " .. seq)
+    end
+  end
+  function CommitDiscovery()
+    if DebugFunction then
+      print("CommitDiscovery() Called")
+    end
+    local last = nil
+    local count = 0
+    for seq, device in pairs(Discovery) do
+      if device.last then
+        if last ~= nil then
+          DiscoveryInvalid = true
+        end
+        last = seq
+      end
+      count = count + 1
+    end
+    if last == nil or count ~= last + 1 then
+      DiscoveryInvalid = true
+    end
+    if not DiscoveryInvalid then
+      for seq = 0, last do
+        if not Discovery[seq] then
+          DiscoveryInvalid = true
+        end
+      end
+    end
+    if DiscoveryInvalid then
+      ClearFeedback()
+      ReportStatus(1, "Discovery incomplete or exceeds configured count")
+      Log("Check configured secondary count and SmartLink chain")
+      return false
+    end
+    local old = Devices
+    Devices = Discovery
+    for i = 1, MaxUnits do
+      local seq = i - 1
+      local device = Devices[i - 1]
+      for _, field in ipairs(SequencerFields) do
+        local control = SeqControl(field.name, i)
+        if field.kind == "Button" then
+          control.IsDisabled = not device
+        end
+        if not device or not old[seq] or old[seq].model ~= device.model then
+          if field.kind == "Text" then
+            control.String = ""
+          elseif field.kind == "Led" then
+            control.Boolean = false
+          end
+          if field.kind ~= "Button" then
+            SetFeedbackAvailable(field.name, i, false)
+          end
+        end
+      end
+      SeqControl("Present", i).Boolean = device ~= nil
+      SetFeedbackAvailable("Present", i, true)
+      if device then
+        if old[seq] and old[seq].model == device.model and not old[seq].needsRefresh then
+          device.status = old[seq].status
+          device.delay = old[seq].delay
+        end
+        SeqControl("Model", i).String = device.model
+        SetFeedbackAvailable("Model", i, true)
+        SeqControl("SeqLabel", i).String = (seq == 0 and "Primary" or "Secondary " .. seq)
+          .. " - "
+          .. device.model
+        SeqControl("SeqPosition", i).String = (seq == 0 and "PRIM" or "SEC")
+          .. (device.last and ",LAST" or "")
+        SetFeedbackAvailable("SeqLabel", i, true)
+        SetFeedbackAvailable("SeqPosition", i, true)
+      end
+    end
+    -- Drop queued traffic to units removed from the chain.
+    local keep = {}
+    for _, item in ipairs(Queue) do
+      if item.seq == nil or Devices[item.seq] then
+        keep[#keep + 1] = item
+      end
+    end
+    Queue = keep
+    UpdateDiscoverySummary()
+    RefreshFault()
+    for seq = 0, last do
+      if not old[seq] or old[seq].model ~= Devices[seq].model or old[seq].needsRefresh then
+        if AutoEvents then
+          Enqueue("!EVENTS_ENABLE " .. seq)
+        end
+        QueryDevice(seq, true)
+      end
+    end
+    Log("Discovered " .. count .. " unit(s)")
+    return true
+  end
+  function ApplyValue(seq, key, value)
+    if not Devices[seq] then
+      return
+    end
+    key = key:upper():gsub("%s+$", "")
+    value = value:gsub("^%s+", ""):gsub("%s+$", "")
+    local field = KeyFields[key] or LedKeys[key]
+    if not field then
+      Log("Unmapped " .. key .. "=" .. value)
+      return false
+    end
+    local control = SeqControl(field, seq + 1)
+    if key == "REMOTE" and not value:match("^%+?%d+%.?%d*%s*[Vv]$") then
+      SetFeedbackAvailable("RemoteVoltage", seq + 1, false)
+      SetFeedbackAvailable("RemoteInput", seq + 1, false)
+      return false
+    end
+    if LedKeys[key] then
+      local v = value:upper()
+      local valid = (key == "PROTECT" or key == "SECLINK") and (v == "OK" or v == "NOTOK")
+        or (key ~= "PROTECT" and key ~= "SECLINK" and (v == "ON" or v == "OFF"))
+      if not valid then
+        SetFeedbackAvailable(field, seq + 1, false)
+        Devices[seq].status = nil
+        return false
+      end
+      control.Boolean = (key == "PROTECT" or key == "SECLINK") and v == "OK"
+        or (key ~= "PROTECT" and key ~= "SECLINK" and v == "ON")
+    else
+      if value == "" then
+        SetFeedbackAvailable(field, seq + 1, false)
+        return false
+      end
+      if key == "VOLTAGE" or key == "CURRENT" or key == "WATTS" or key == "VA" or key == "PF" then
+        if not tonumber(value) then
+          SetFeedbackAvailable(field, seq + 1, false)
+          return false
+        end
+      end
+      if key == "SEQ" then
+        control.String = tostring(seq)
+          .. (seq == 0 and " (Primary)" or " (Secondary)")
+          .. (value:find("LAST", 1, true) and " LAST" or "")
+      elseif key == "TOTAL DELAY" or key == "DIP MAX DELAY" then
+        control.String = value:gsub(" SECONDS", "s"):gsub(" MINUTES", "min")
+      else
+        control.String = value
+      end
+    end
+    SetFeedbackAvailable(field, seq + 1, true)
+    if key == "REMOTE" then
+      SeqControl("RemoteInput", seq + 1).Boolean = (tonumber(value:match("[%d%.]+")) or 0) > 0
+      SetFeedbackAvailable("RemoteInput", seq + 1, true)
+    elseif key == "TOTAL DELAY" then
+      local amount = tonumber(value:match("[%d%.]+"))
+      Devices[seq].delay = amount and amount * (value:upper():find("MIN", 1, true) and 60 or 1)
+    end
+    return true
+  end
+  function ParseAck(line)
+    local seq, rest = line:match("^%$ACK%s+(%d+)%s*,?%s*(.-)%s*$")
+    return tonumber(seq), rest
+  end
+  function DiscoveryLine(line)
+    local seq, rest = ParseAck(line)
+    if not seq then
+      return
+    end
+    local model, tail = rest:match("^(CN%-%w[%w%-]*)%s*,?%s*(.-)%s*$")
+    if not model then
+      return
+    end
+    if seq >= MaxUnits or Discovery[seq] then
+      DiscoveryInvalid = true
+      return
+    end
+    Discovery[seq] = { model = model, last = tail == "LAST" }
+  end
+  function ApplyQuery(lines)
+    if DebugFunction then
+      print("ApplyQuery() Called")
+    end
+    local item = Pending
+    if not item then
+      return false
+    end
+    if item.command == "?ROLLCALL" then
+      for _, line in ipairs(lines) do
+        DiscoveryLine(line)
+      end
+      return CommitDiscovery()
+    elseif item.command == "?HELP" then
+      Controls.HelpResponse.String = table.concat(lines, "\n")
+      return true
+    end
+    local seq, rest = ParseAck(lines[1] or "")
+    if seq ~= item.seq or not Devices[seq] then
+      return false
+    end
+    local kind = item.command:match("^%?([%w_]+)")
+    if rest == "ID" and kind == "ID" then
+      if #lines < 6 then
+        return false
+      end
+      for i, field in ipairs({
+        "Brand",
+        "Model",
+        "SerialNumber",
+        "FirmwareRevision",
+        "RevisionDate",
+      }) do
+        SeqControl(field, seq + 1).String = lines[i + 1]
+        SetFeedbackAvailable(field, seq + 1, true)
+      end
+      Devices[seq].model = lines[3]
+      SeqControl("SeqLabel", seq + 1).String = (seq == 0 and "Primary" or "Secondary " .. seq)
+        .. " - "
+        .. lines[3]
+      return true
+    end
+    local expected =
+      { VOLTAGE = "VOLTAGE", CURRENT = "CURRENT", POWER = "WATTS", POWER_VA = "VA", PF = "PF" }
+    if expected[kind] then
+      local key, value = rest:match("^([%w_ ]-)%s*=%s*(.-)%s*$")
+      if key ~= expected[kind] then
+        return false
+      end
+      return ApplyValue(seq, key, value)
+    end
+    if
+      rest ~= kind
+      or (kind ~= "STATUS" and kind ~= "SETTINGS" and kind ~= "BANK_STAT")
+      or #lines < 2
+    then
+      return false
+    end
+    local seen = {}
+    for i = 2, #lines do
+      local key, value = lines[i]:match("^([%w_%. ]-)%s*=%s*(.-)%s*$")
+      if key then
+        seen[key] = ApplyValue(seq, key, value)
+      end
+    end
+    if kind == "STATUS" then
+      Devices[seq].status = seen.PROTECT and seen.EVS and seen.ALARM and seen.SECLINK
+    end
+    if kind == "STATUS" then
+      return Devices[seq].status == true
+    end
+    if kind == "BANK_STAT" then
+      return seen.BANK1 == true and seen.BANK2 == true and seen.BANK3 == true
+    end
+    for _, key in ipairs({
+      "POT ADJ",
+      "DIP MAX DELAY",
+      "TOTAL DELAY",
+      "DIP MODE",
+      "DIP SEQ",
+      "DIP ALARM",
+      "DIP EVS",
+      "KEY",
+    }) do
+      if not seen[key] then
+        return false
+      end
+    end
+    return true
+  end
+  function CompleteCommand(success)
+    local item = Pending
+    if not item then
+      return
+    end
+    CommandTimer:Stop()
+    Pending = nil
+    ResponseLines = {}
+    QueryRejected = false
+    if success then
+      local found = 0
+      for _ in pairs(Devices) do
+        found = found + 1
+      end
+      local mismatch = found ~= MaxUnits
+        or (Devices[0] and Devices[0].model ~= Properties["Primary Sequencer Model"].Value)
+      ReportStatus(
+        mismatch and 1 or 0,
+        mismatch and "Responding; check model / secondary count" or "Responding"
+      )
+      if
+        item.command:match("^!SEQ_O")
+        or item.command:match("^!ALL_OFF")
+        or item.command:match("^!BANK_")
+        or item.command:match("^!CLEAR_PER")
+      then
+        if item.seq then
+          Enqueue("?STATUS " .. item.seq)
+        else
+          for seq in pairs(Devices) do
+            Enqueue("?STATUS " .. seq)
+          end
+        end
+      elseif item.command:match("^!RESET") then
+        local device = Devices[item.seq]
+        if device then
+          device.needsRefresh = true
+          device.status = nil
+          for _, field in ipairs(SequencerFields) do
+            local control = SeqControl(field.name, item.seq + 1)
+            if field.kind ~= "Button" and field.name ~= "Present" then
+              SetFeedbackAvailable(field.name, item.seq + 1, false)
+              if field.kind == "Text" then
+                control.String = ""
+              else
+                control.Boolean = false
+              end
+            end
+          end
+        end
+        Recovering = true
+        RecoveryTimer:Start(ResetDelay)
+      end
+    else
+      ReportStatus(1, "Rejected or unexpected reply: " .. item.command)
+    end
+    RefreshFault()
+    UpdateControlAvailability()
+  end
+  function HandleDeviceEvent(line)
+    Log(line)
+    if line:find("SEQ_CHANGE", 1, true) then
+      Enqueue("!ENUMERATE")
+      return
+    end
+    local seq = tonumber(line:match("(%d+)"))
+    if seq and Devices[seq] then
+      Enqueue("?STATUS " .. seq)
+    else
+      for id in pairs(Devices) do
+        Enqueue("?STATUS " .. id)
+      end
+    end
+  end
+  function CommandReply(line)
+    if not Pending then
+      return false
+    end
+    local command = Pending.command
+    if command == "!ENUMERATE" then
+      DiscoveryLine(line)
+      if line:match("LAST%s*$") then
+        CompleteCommand(CommitDiscovery())
+        return true
+      end
+      return false
+    end
+    local verb = command:match("^!([%w_]+)")
+    if not verb then
+      return false
+    end
+    local seq, rest = ParseAck(line)
+    if Pending.seq == nil then
+      if (verb == "SEQ_ON" or verb == "SEQ_OFF") and line == "$" .. verb .. "_DONE" then
+        CompleteCommand(true)
+        return true
+      end
+      return false
+    end
+    if seq ~= Pending.seq then
+      return false
+    end
+    if verb == "SEQ_ON" or verb == "SEQ_OFF" then
+      if rest ~= verb .. "_DONE" then
+        return false
+      end
+    elseif verb == "BANK_ON" or verb == "BANK_OFF" then
+      local bank = tonumber(command:match(" (%d+)$"))
+      if not rest:match("^" .. verb .. "%s+" .. bank .. "%s*=") then
+        return false
+      end
+      -- BANK_OFF=ON is a vendor typo: read authoritative BANK_STAT instead.
+      Enqueue("?BANK_STAT " .. seq)
+    elseif rest ~= verb then
+      return false
+    end
+    if verb == "EVENTS_ENABLE" or verb == "EVENTS_DISABLE" then
+      SeqControl("EventsEnabled", seq + 1).Boolean = verb == "EVENTS_ENABLE"
+      SetFeedbackAvailable("EventsEnabled", seq + 1, true)
+    end
+    CompleteCommand(true)
+    return true
+  end
+  function ProcessToken(text, eot)
+    text = text:gsub("^%s+", ""):gsub("%s+$", "")
+    if DebugRx then
+      print("RX: " .. text)
+    end
+    if text:sub(1, 1) == "*" then
+      HandleDeviceEvent(text)
+      if eot and Pending and Pending.query then
+        CompleteCommand(not QueryRejected and ApplyQuery(ResponseLines))
+      end
+      return
+    end
+    if text:find("INVALID[%s_]PARAMETER") or text:find("COMMAND[%s_]CONFLICT") then
+      Log(text)
+      if Pending and Pending.query and not eot then
+        QueryRejected = true
+      else
+        CompleteCommand(false)
+      end
+    elseif Pending and Pending.query then
+      if text ~= "" then
+        ResponseLines[#ResponseLines + 1] = text
+        local bytes = 0
+        for _, line in ipairs(ResponseLines) do
+          bytes = bytes + #line
+        end
+        if #ResponseLines > ResponseLineLimit or bytes > ResponseByteLimit then
+          CommandTimer:Stop()
+          Pending = nil
+          Queue = {}
+          ResponseLines = {}
+          QueryRejected = false
+          Recovering = true
+          ClearFeedback()
+          ReportStatus(2, "Response limit exceeded")
+          RecoveryTimer:Start(RecoveryDelay)
+        end
+      end
+    elseif text ~= "" then
+      if not CommandReply(text) then
+        Log("Unsolicited reply: " .. text)
+      end
+    end
+    if eot and Pending and Pending.query then
+      local success = not QueryRejected and ApplyQuery(ResponseLines)
+      QueryRejected = false
+      CompleteCommand(success)
+    end
+  end
+  function OnData()
+    if DebugFunction then
+      print("OnData() Called")
+    end
+    local data = SerialPort:Read(SerialPort.BufferLength)
+    if not data then
+      return
+    end
+    if Recovering and not RecoveryRequiresReconnect then
+      RecoveryTimer:Start(RecoveryDelay)
+    end
+    RxBuffer = RxBuffer .. data
+    if #RxBuffer > ResponseByteLimit then
+      Log("Receive buffer overflow")
+      RxBuffer = ""
+      Queue = {}
+      Pending = nil
+      CommandTimer:Stop()
+      QueryRejected = false
+      Recovering = true
+      ClearFeedback()
+      RecoveryTimer:Start(RecoveryDelay)
+      ReportStatus(2, "Receive buffer overflow")
+      return
+    end
+    Pumping = true
+    while true do
+      local at = RxBuffer:find("[\r\n\004]")
+      if not at then
+        break
+      end
+      local token = RxBuffer:sub(1, at - 1)
+      local ending = RxBuffer:sub(at, at)
+      RxBuffer = RxBuffer:sub(at + 1)
+      ProcessToken(token, ending == string.char(4))
+    end
+    Pumping = false
+    UpdateControlAvailability()
+    ServiceQueue()
+  end
+  function OnDisconnected(port, message)
+    if DebugFunction then
+      print("OnDisconnected() Called")
+    end
+    PollTimer:Stop()
+    CommandTimer:Stop()
+    RecoveryTimer:Stop()
+    Queue = {}
+    Pending = nil
+    RxBuffer = ""
+    ResponseLines = {}
+    Recovering = false
+    QueryRejected = false
+    ReportStatus(4, "Disconnected")
+    Log(message or "Serial closed")
+    ClearFeedback()
+  end
+  function OnConnected()
+    if DebugFunction then
+      print("OnConnected() Called")
+    end
+    CommandTimer:Stop()
+    RecoveryTimer:Stop()
+    Queue = {}
+    Pending = nil
+    RxBuffer = ""
+    ResponseLines = {}
+    Recovering = false
+    QueryRejected = false
+    RecoveryRequiresReconnect = false
+    ClearFeedback()
+    ReportStatus(5, "Discovering SmartLink chain")
+    Enqueue("!ENUMERATE")
+    PollTimer:Start(Properties["Poll Interval (s)"].Value)
+  end
+  function OpenSerialPort()
+    if DebugFunction then
+      print("OpenSerialPort() Called")
+    end
+    if not SerialPort then
+      ReportStatus(4, "Serial pin not connected")
+      ClearFeedback()
+      return
+    end
+    if SerialPort.IsOpen then
+      SerialPort:Close()
+    end
+    local ok, err = pcall(function()
+      return SerialPort:Open(19200, 8, "N", 1)
+    end)
+    if not ok or err then
+      ReportStatus(2, "Serial open failed")
+      Log(tostring(err))
+    end
+  end
+  function SendDeviceCommand(seq, name)
+    if DebugFunction then
+      print("SendDeviceCommand() Called")
+    end
+    if not Devices[seq] then
+      return
+    end
+    local verbs = {
+      SeqOnBtn = "SEQ_ON",
+      SeqOffBtn = "SEQ_OFF",
+      AllOffBtn = "ALL_OFF",
+      ResetBtn = "RESET",
+      ClearPERBtn = "CLEAR_PER",
+      EventsOnBtn = "EVENTS_ENABLE",
+      EventsOffBtn = "EVENTS_DISABLE",
+    }
+    if verbs[name] then
+      Enqueue("!" .. verbs[name] .. " " .. seq)
+      return
+    end
+    local bank, action = name:match("^Bank(%d)(%a+)Btn$")
+    if bank then
+      Enqueue("!BANK_" .. action:upper() .. " " .. seq .. " " .. bank)
+    end
+  end
+
+  --*** Event handlers ***
+  CommandTimer.EventHandler = function()
+    CommandTimer:Stop()
+    local command = Pending and Pending.command or "unknown"
+    Log("Timed out: " .. command)
+    Queue = {}
+    Pending = nil
+    ResponseLines = {}
+    RxBuffer = ""
+    QueryRejected = false
+    ReportStatus(4, "No reply: " .. command)
+    ClearFeedback()
+    -- A sequence completion can take minutes; never overlap it with a new command.
+    if command:match("^!SEQ_O") then
+      Recovering = true
+      RecoveryRequiresReconnect = true
+    else
+      Recovering = true
+      RecoveryTimer:Start(RecoveryDelay)
+    end
+    UpdateControlAvailability()
+  end
+  RecoveryTimer.EventHandler = function()
+    RecoveryTimer:Stop()
+    if SerialPort and SerialPort.BufferLength > 0 then
+      SerialPort:Read(SerialPort.BufferLength)
+    end
+    RxBuffer = ""
+    Recovering = false
+    if not Devices[0] then
+      Enqueue("!ENUMERATE")
+    else
+      Enqueue("?ROLLCALL")
+    end
+    UpdateControlAvailability()
+    ServiceQueue()
+  end
+  PollTimer.EventHandler = function()
+    if not Pending and #Queue == 0 and not Recovering then
+      Tick = Tick + 1
+      if next(Devices) == nil or Tick % 6 == 0 then
+        Enqueue("?ROLLCALL")
+      end
+      for seq = 0, MaxUnits - 1 do
+        if Devices[seq] then
+          QueryDevice(seq, false)
+        end
+      end
+    end
+    PollTimer:Start(Properties["Poll Interval (s)"].Value)
+  end
+  for _, field in ipairs(SequencerFields) do
+    if field.kind == "Button" then
+      for i = 1, MaxUnits do
+        local seq = i - 1
+        local name = field.name
+        SeqControl(name, i).EventHandler = function(ctl)
+          if ctl.Value == 1 then
+            SendDeviceCommand(seq, name)
+          end
+        end
+      end
+    end
+  end
+  GlobalActions = {
+    GlobalSeqOn = function()
+      if next(Devices) then
+        Enqueue("!SEQ_ON")
+      end
+    end,
+    GlobalSeqOff = function()
+      if next(Devices) then
+        Enqueue("!SEQ_OFF")
+      end
+    end,
+    EnumerateBtn = function()
+      Enqueue("!ENUMERATE")
+    end,
+    RollCallBtn = function()
+      Enqueue("?ROLLCALL")
+    end,
+    HelpBtn = function()
+      Enqueue("?HELP")
+    end,
+    ReconnectBtn = OpenSerialPort,
+  }
+  for name, fn in pairs(GlobalActions) do
+    local action = fn
+    Controls[name].EventHandler = function(ctl)
+      if ctl.Value == 1 then
+        action()
+      end
+    end
+  end
+  for name, verb in pairs({
+    GlobalAllOff = "ALL_OFF",
+    GlobalEventsOn = "EVENTS_ENABLE",
+    GlobalEventsOff = "EVENTS_DISABLE",
+    GlobalClearPER = "CLEAR_PER",
+    GlobalReset = "RESET",
+  }) do
+    local command = verb
+    Controls[name].EventHandler = function(ctl)
+      if ctl.Value == 1 then
+        -- Reset secondaries first and the primary last, because it carries serial traffic.
+        for seq = MaxUnits - 1, 0, -1 do
+          if Devices[seq] then
+            Enqueue("!" .. command .. " " .. seq)
+          end
+        end
+      end
+    end
+  end
+  if SerialPort then
+    SerialPort.Data = OnData
+    SerialPort.Connected = OnConnected
+    SerialPort.Closed = OnDisconnected
+    SerialPort.Error = OnDisconnected
+    SerialPort.Timeout = OnDisconnected
+  end
+
+  OpenTimer.EventHandler = function()
+    OpenTimer:Stop()
+    OpenSerialPort()
+  end
+
+  --*** Initialization ***
+  function Initialization()
+    SetupDebugPrint()
+    for _, field in ipairs(SequencerFields) do
+      FeedbackTypes[field.name] = field.kind
+    end
+    Controls.BaudRate.String = "19200"
+    Controls.StartBits.String = "1"
+    Controls.DataBits.String = "8"
+    Controls.StopBits.String = "1"
+    Controls.Parity.String = "None"
+    Controls.FlowControl.String = "None"
+    Controls.HelpResponse.String = ""
+    EventLog.String = ""
+    print("Furman SmartSequencer " .. PluginInfo.Version)
+    ClearFeedback()
+    ReportStatus(5, "Initializing")
+    OpenTimer:Start(SerialOpenDelay)
+  end
+
+  Initialization()
+end
