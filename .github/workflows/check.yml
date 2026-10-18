@@ -10,5 +10,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - run: python3 -m unittest discover -s tests -p test_package_identity.py
       - run: python3 scripts/verify.py
       - run: dotnet pack FurmanContractor.csproj -o dist

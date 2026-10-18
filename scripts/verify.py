@@ -1,17 +1,23 @@
-"""Verify package identity and source integrity before publishing."""
-from pathlib import Path
+"""Verify reviewed source bytes and product/release identity before packaging."""
+import argparse
 import hashlib
-import re
-import xml.etree.ElementTree as ET
+from pathlib import Path
+from package_checks import check_identity
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--release-tag", help="Exact release tag; must equal v + source and project version")
+args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 source = (root / "content/FurmanContractorSmartSequencer.qplug").read_bytes()
-assert hashlib.sha256(source).hexdigest() == "ee31140ec8b9cd90b810924c3dc975cdca1cbe27464ce83f7ae57a40735cbe31", "Update the reviewed source digest for an intentional plugin revision"
-info = re.search(r"PluginInfo\s*=\s*\{(.*?)\}", source.decode("utf-8-sig"), re.S)[1]
-version = re.search(r'\bVersion\s*=\s*"([^"]+)"', info)[1]
-project = ET.parse(root / "FurmanContractor.csproj").getroot()
-assert version == project.findtext("PropertyGroup/Version"), "Plugin/package version mismatch"
-assert project.findtext("PropertyGroup/PackageId") == "JoshuaSmall.Qsys.FurmanContractor"
-assert (root / "icon.png").read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
-assert "https://joshua-small.github.io/qsys-furman-contractor/registration/joshuasmall.qsys.furmancontractor/index.json" in (root / "README.md").read_text()
+if hashlib.sha256(source).hexdigest() != "ee31140ec8b9cd90b810924c3dc975cdca1cbe27464ce83f7ae57a40735cbe31":
+    raise SystemExit("Update the reviewed source digest for an intentional plugin revision")
+try:
+    version = check_identity(source.decode("utf-8-sig"), (root / "FurmanContractor.csproj").read_text(),
+        "JoshuaSmall.Qsys.FurmanContractor", args.release_tag)
+except ValueError as error:
+    raise SystemExit(str(error)) from error
+if not (root / "icon.png").read_bytes().startswith(b"\x89PNG\r\n\x1a\n"):
+    raise SystemExit("Invalid package icon")
+if "https://joshua-small.github.io/qsys-furman-contractor/registration/joshuasmall.qsys.furmancontractor/index.json" not in (root / "README.md").read_text():
+    raise SystemExit("README Library feed does not match package identity")
 print("Verified", "FurmanContractorSmartSequencer.qplug", version, hashlib.sha256(source).hexdigest())
