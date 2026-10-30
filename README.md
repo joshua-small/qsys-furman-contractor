@@ -2,7 +2,16 @@
 
 Control a configured chain of Furman Contractor Series SmartSequencers, with global commands and per-device controls, identification and measurements. Choose CN-1800S, CN-2400S or CN-3600SE for the primary sequencer and configure the number of secondary sequencers.
 
-Plugin and package version: **1.2.0.3**.
+Plugin and package version: **1.2.0.5**.
+
+## Changes in 1.2.0.5
+
+- Handles segmented, fragmented, coalesced and delayed serial replies, including status data that continues after an intermediate EOT.
+- Updates valid known fields independently, filters command echo, and routes late feedback to its addressed device without acknowledging an unrelated request.
+- Separates connection health from individual poll completion. An isolated delayed poll retains recent feedback; sustained silence still reports Missing and invalidates it.
+- Preserves command/sequence confirmation, configured model/count properties, control pins and page layout.
+
+Reply handling was reported working in a live Core test. Broader model/firmware coverage, physical switching behavior and saved-instance migration remain subject to verification on the target system.
 
 ## Install with Q-SYS Library
 
@@ -42,3 +51,11 @@ This is an independent personal package, not a Q-SYS Verified Asset or a manufac
 ### Offline package checks
 
 Run `python3 scripts/verify.py` and `python3 -m unittest discover -s tests -p test_package_identity.py`. Before a release, run `python3 scripts/verify.py --release-tag v<VERSION>`. The exact tag, project package version and `PluginInfo.Version` must agree. `BuildVersion` is a separate optional SDK field. These checks do not establish Designer or hardware acceptance.
+
+### Serial reply regression tests
+
+Run `uv run --python 3.10 --with lupa python tests/test_serial_replies.py` for 40 synthetic Lua 5.3 tests covering segmented/late/coalesced replies, partial fields, echo, address routing, recovery and connection-liveness expiry. No device connection is used by these tests.
+
+Receive framing settles after 200 ms of quiet. Connection-liveness grace is the greater of three polling intervals and 15 seconds, checked every five seconds; the default polling interval gives 30 seconds. Expected long-running commands retain their own completion deadlines. A timed-out sequence requires explicit reconnect before another command; stale feedback can still expire during that hold.
+
+The protocol has no transaction IDs. Unaddressed continuation lines use the most recent compatible reply context, and sufficiently delayed same-address/same-kind duplicates cannot be distinguished perfectly from fresh replies. Connection health is connection-wide, not a per-device/per-field freshness guarantee. Rx debug includes hexadecimal received bytes to help diagnose firmware framing differences.

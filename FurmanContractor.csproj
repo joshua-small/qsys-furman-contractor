@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <PackageId>JoshuaSmall.Qsys.FurmanContractor</PackageId>
-    <Version>1.2.0.3</Version>
+    <Version>1.2.0.5</Version>
     <Title>Furman Contractor Series</Title>
     <Authors>Joshua Small</Authors>
     <Description>Furman Contractor Series SmartSequencer serial control for Q-SYS.</Description>

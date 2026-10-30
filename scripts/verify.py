@@ -9,7 +9,7 @@ parser.add_argument("--release-tag", help="Exact release tag; must equal v + sou
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 source = (root / "content/FurmanContractorSmartSequencer.qplug").read_bytes()
-if hashlib.sha256(source).hexdigest() != "ee31140ec8b9cd90b810924c3dc975cdca1cbe27464ce83f7ae57a40735cbe31":
+if hashlib.sha256(source).hexdigest() != "793e6aa705d7f3d68127ea7dd78468755bc8fbcc37b9a816bf91f46034e54f73":
     raise SystemExit("Update the reviewed source digest for an intentional plugin revision")
 try:
     version = check_identity(source.decode("utf-8-sig"), (root / "FurmanContractor.csproj").read_text(),

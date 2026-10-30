@@ -7,8 +7,8 @@ PluginInfo = {
   Id = "b6890c6f-d9cc-461b-89c7-7327ae65e09c",
   Name = "Furman~Contractor Series SmartSequencer",
   Author = "Joshua Small",
-  BuildVersion = "1.2.0.3",
-  Version = "1.2.0.3",
+  BuildVersion = "1.2.0.5",
+  Version = "1.2.0.5",
   ShowDebug = true,
   Description = "Configured SmartSequencer chain with Global and per-device pages, identity, measurements and physical settings.",
   Model = "Contractor Series SmartSequencer",
@@ -3594,6 +3594,11 @@ if Controls then
   CommandTimer = Timer.New()
   RecoveryTimer = Timer.New()
   OpenTimer = Timer.New()
+  ReplyGapTimer = Timer.New()
+  LivenessTimer = Timer.New()
+  ReplyGapActive = false
+  ActiveReplyFrame = nil
+  LastReplyAt = nil
   Queue = {}
   ResponseLines = {}
   Devices = {}
@@ -3609,6 +3614,7 @@ if Controls then
   RecoveryDelay = 3
   ResetDelay = 5
   SerialOpenDelay = 1
+  InterRequestDelay = 0.2
   CommandBufferSize = 32
   QueueCapacityPerUnit = 16
   ResponseLineLimit = 256
@@ -3786,6 +3792,8 @@ if Controls then
   function ServiceQueue()
     if
       Pending
+      or ReplyGapActive
+      or RxBuffer ~= ""
       or Pumping
       or Recovering
       or not SerialPort
@@ -3796,6 +3804,7 @@ if Controls then
     end
     local item = table.remove(Queue, 1)
     Pending = item
+    Pending.replyStarted = false
     ResponseLines = {}
     QueryRejected = false
     if item.command == "!ENUMERATE" or item.command == "?ROLLCALL" then
@@ -4043,102 +4052,14 @@ if Controls then
     end
     Discovery[seq] = { model = model, last = tail == "LAST" }
   end
-  function ApplyQuery(lines)
-    if DebugFunction then
-      print("ApplyQuery() Called")
-    end
-    local item = Pending
-    if not item then
-      return false
-    end
-    if item.command == "?ROLLCALL" then
-      for _, line in ipairs(lines) do
-        DiscoveryLine(line)
-      end
-      return CommitDiscovery()
-    elseif item.command == "?HELP" then
-      Controls.HelpResponse.String = table.concat(lines, "\n")
-      return true
-    end
-    local seq, rest = ParseAck(lines[1] or "")
-    if seq ~= item.seq or not Devices[seq] then
-      return false
-    end
-    local kind = item.command:match("^%?([%w_]+)")
-    if rest == "ID" and kind == "ID" then
-      if #lines < 6 then
-        return false
-      end
-      for i, field in ipairs({
-        "Brand",
-        "Model",
-        "SerialNumber",
-        "FirmwareRevision",
-        "RevisionDate",
-      }) do
-        SeqControl(field, seq + 1).String = lines[i + 1]
-        SetFeedbackAvailable(field, seq + 1, true)
-      end
-      Devices[seq].model = lines[3]
-      SeqControl("SeqLabel", seq + 1).String = (seq == 0 and "Primary" or "Secondary " .. seq)
-        .. " - "
-        .. lines[3]
-      return true
-    end
-    local expected =
-      { VOLTAGE = "VOLTAGE", CURRENT = "CURRENT", POWER = "WATTS", POWER_VA = "VA", PF = "PF" }
-    if expected[kind] then
-      local key, value = rest:match("^([%w_ ]-)%s*=%s*(.-)%s*$")
-      if key ~= expected[kind] then
-        return false
-      end
-      return ApplyValue(seq, key, value)
-    end
-    if
-      rest ~= kind
-      or (kind ~= "STATUS" and kind ~= "SETTINGS" and kind ~= "BANK_STAT")
-      or #lines < 2
-    then
-      return false
-    end
-    local seen = {}
-    for i = 2, #lines do
-      local key, value = lines[i]:match("^([%w_%. ]-)%s*=%s*(.-)%s*$")
-      if key then
-        seen[key] = ApplyValue(seq, key, value)
-      end
-    end
-    if kind == "STATUS" then
-      Devices[seq].status = seen.PROTECT and seen.EVS and seen.ALARM and seen.SECLINK
-    end
-    if kind == "STATUS" then
-      return Devices[seq].status == true
-    end
-    if kind == "BANK_STAT" then
-      return seen.BANK1 == true and seen.BANK2 == true and seen.BANK3 == true
-    end
-    for _, key in ipairs({
-      "POT ADJ",
-      "DIP MAX DELAY",
-      "TOTAL DELAY",
-      "DIP MODE",
-      "DIP SEQ",
-      "DIP ALARM",
-      "DIP EVS",
-      "KEY",
-    }) do
-      if not seen[key] then
-        return false
-      end
-    end
-    return true
-  end
   function CompleteCommand(success)
     local item = Pending
     if not item then
       return
     end
     CommandTimer:Stop()
+    ReplyGapActive = true
+    ReplyGapTimer:Start(InterRequestDelay)
     Pending = nil
     ResponseLines = {}
     QueryRejected = false
@@ -4256,53 +4177,271 @@ if Controls then
     CompleteCommand(true)
     return true
   end
+  -- Reply ownership and transport liveness are independent of the polling queue.
+  function CommunicationGrace()
+    return math.max(3 * Properties["Poll Interval (s)"].Value, 3 * ResponseTimeout)
+  end
+  function NoteReply()
+    LastReplyAt = Timer.Now()
+  end
+  function ReplyKeyAllowed(kind, key)
+    if kind == "STATUS" then
+      return LedKeys[key] ~= nil
+        or key == "SEQ"
+        or key == "REMOTE"
+        or key == "UART0 PER"
+        or key == "UART1 PER"
+    end
+    if kind == "SETTINGS" then
+      return key == "POT ADJ"
+        or key == "DIP MAX DELAY"
+        or key == "TOTAL DELAY"
+        or key == "DIP MODE"
+        or key == "DIP SEQ"
+        or key == "DIP ALARM"
+        or key == "DIP EVS"
+        or key == "KEY"
+    end
+    if kind == "BANK_STAT" then
+      return key:match("^BANK[123]$") ~= nil
+    end
+    local scalar =
+      { VOLTAGE = "VOLTAGE", CURRENT = "CURRENT", POWER = "WATTS", POWER_VA = "VA", PF = "PF" }
+    return scalar[kind] == key
+  end
+  function AddReplyLine(frame, text)
+    frame.bytes = frame.bytes + #text
+    if #frame.lines >= ResponseLineLimit or frame.bytes > ResponseByteLimit then
+      frame.overflow = true
+      if frame.owner == Pending then
+        CompleteCommand(false)
+      end
+      ActiveReplyFrame = nil
+      Log("Reply frame limit exceeded")
+      return false
+    end
+    frame.lines[#frame.lines + 1] = text
+    return true
+  end
+  function ApplyReplyLine(frame, text)
+    if frame.seq ~= nil and not Devices[frame.seq] then
+      return
+    end
+    if frame.kind == "HELP" then
+      Controls.HelpResponse.String = table.concat(frame.lines, "\n")
+      frame.valid = true
+      NoteReply()
+      return
+    end
+    if frame.kind == "ID" then
+      if #frame.lines == 6 then
+        for i, field in ipairs({
+          "Brand",
+          "Model",
+          "SerialNumber",
+          "FirmwareRevision",
+          "RevisionDate",
+        }) do
+          SeqControl(field, frame.seq + 1).String = frame.lines[i + 1]
+          SetFeedbackAvailable(field, frame.seq + 1, true)
+        end
+        Devices[frame.seq].model = frame.lines[3]
+        SeqControl("SeqLabel", frame.seq + 1).String = (
+          frame.seq == 0 and "Primary" or "Secondary " .. frame.seq
+        )
+          .. " - "
+          .. frame.lines[3]
+        frame.valid = true
+        NoteReply()
+      end
+      return
+    end
+    local key, value = text:match("^([%w_%. ]-)%s*=%s*(.-)%s*$")
+    if key and ReplyKeyAllowed(frame.kind, key) and ApplyValue(frame.seq, key, value) then
+      frame.valid = true
+      frame.seen[key] = true
+      frame.lastAt = Timer.Now()
+      NoteReply()
+      if frame.kind == "STATUS" then
+        local v = FeedbackValid[frame.seq + 1] or {}
+        Devices[frame.seq].status = v.ProtectStatus
+          and v.ExtremeVoltage
+          and v.Alarm
+          and v.LinkStatus
+      end
+      RefreshFault()
+    end
+  end
+  function StartReplyFrame(text)
+    local seq, rest = ParseAck(text)
+    local kind
+    if Pending and Pending.command == "?ROLLCALL" and seq and rest:match("^CN%-") then
+      local frame = Pending.replyFrame
+      if not frame then
+        frame = {
+          kind = "ROLLCALL",
+          lines = {},
+          bytes = 0,
+          seen = {},
+          owner = Pending,
+          lastAt = Timer.Now(),
+        }
+        Pending.replyFrame = frame
+      end
+      ActiveReplyFrame = frame
+      AddReplyLine(frame, text)
+      NoteReply()
+      return true
+    end
+    if text == "Commands" and Pending and Pending.command == "?HELP" then
+      kind = "HELP"
+    elseif seq and Devices[seq] then
+      if rest == "STATUS" or rest == "SETTINGS" or rest == "BANK_STAT" or rest == "ID" then
+        kind = rest
+      else
+        local key = rest:match("^([%w_ ]-)%s*=")
+        kind = ({
+          VOLTAGE = "VOLTAGE",
+          CURRENT = "CURRENT",
+          WATTS = "POWER",
+          VA = "POWER_VA",
+          PF = "PF",
+        })[key]
+      end
+    end
+    if not kind then
+      return false
+    end
+    local owner = Pending
+        and Pending.query
+        and (Pending.command == "?HELP" and kind == "HELP" or Pending.seq == seq and Pending.command == "?" .. kind .. " " .. seq)
+        and Pending
+      or nil
+    local frame = {
+      kind = kind,
+      seq = seq,
+      owner = owner,
+      lines = {},
+      bytes = 0,
+      seen = {},
+      lastAt = Timer.Now(),
+    }
+    ActiveReplyFrame = frame
+    if owner then
+      owner.replyFrame = frame
+      owner.replyStarted = true
+      ResponseLines = frame.lines
+    end
+    if AddReplyLine(frame, text) then
+      if kind ~= "ID" then
+        ApplyReplyLine(frame, rest or text)
+      end
+    end
+    NoteReply()
+    return true
+  end
+  function FinishQueryFrame()
+    -- EOT may delimit only a segment. Preserve the frame and its address context.
+    if ActiveReplyFrame then
+      ActiveReplyFrame.eot = true
+    end
+    if Pending and Pending.query and QueryRejected then
+      Pending.errorEot = true
+    end
+  end
+  function SettleQueryReply()
+    if not Pending or not Pending.query then
+      return
+    end
+    if QueryRejected then
+      if Pending.errorEot then
+        CompleteCommand(false)
+      end
+      return
+    end
+    local frame = Pending.replyFrame
+    if not frame or frame.overflow then
+      return
+    end
+    if frame.kind == "ROLLCALL" then
+      -- Topology replacement still requires a complete, validated LAST response.
+      if not frame.eot then
+        return
+      end
+      local last = false
+      for _, line in ipairs(frame.lines) do
+        if line:match(",%s*LAST%s*$") then
+          last = true
+        end
+      end
+      if not last then
+        return
+      end
+      for _, line in ipairs(frame.lines) do
+        DiscoveryLine(line)
+      end
+      CompleteCommand(CommitDiscovery())
+    elseif frame.valid then
+      CompleteCommand(true)
+    elseif frame.eot then
+      CompleteCommand(false)
+    end
+  end
   function ProcessToken(text, eot)
     text = text:gsub("^%s+", ""):gsub("%s+$", "")
     if DebugRx then
       print("RX: " .. text)
     end
     if text:sub(1, 1) == "*" then
-      HandleDeviceEvent(text)
-      if eot and Pending and Pending.query then
-        CompleteCommand(not QueryRejected and ApplyQuery(ResponseLines))
+      local seq = tonumber(text:match("(%d+)"))
+      if seq and Devices[seq] then
+        NoteReply()
       end
-      return
-    end
-    if text:find("INVALID[%s_]PARAMETER") or text:find("COMMAND[%s_]CONFLICT") then
+      HandleDeviceEvent(text)
+    elseif
+      text:match("^%$INVALID[%s_]COMMAND")
+      or text:match("^%$INVALID[%s_]PARAMETER")
+      or text:match("^%$COMMAND[%s_]CONFLICT")
+    then
+      NoteReply()
       Log(text)
-      if Pending and Pending.query and not eot then
+      if Pending and Pending.query then
         QueryRejected = true
       else
         CompleteCommand(false)
       end
-    elseif Pending and Pending.query then
-      if text ~= "" then
-        ResponseLines[#ResponseLines + 1] = text
-        local bytes = 0
-        for _, line in ipairs(ResponseLines) do
-          bytes = bytes + #line
-        end
-        if #ResponseLines > ResponseLineLimit or bytes > ResponseByteLimit then
-          CommandTimer:Stop()
-          Pending = nil
-          Queue = {}
-          ResponseLines = {}
-          QueryRejected = false
-          Recovering = true
-          ClearFeedback()
-          ReportStatus(2, "Response limit exceeded")
-          RecoveryTimer:Start(RecoveryDelay)
-        end
-      end
     elseif text ~= "" then
-      if not CommandReply(text) then
-        Log("Unsolicited reply: " .. text)
+      local helpBody = ActiveReplyFrame
+        and ActiveReplyFrame.kind == "HELP"
+        and ActiveReplyFrame.owner == Pending
+      if Pending and text == Pending.command then
+        if eot then
+          FinishQueryFrame()
+        end
+        return
+      elseif text:match("^[!?]") and not helpBody then
+        -- Ignore late command echoes too, without filtering HELP descriptions.
+        if eot then
+          FinishQueryFrame()
+        end
+        return
+      elseif not (Pending and Pending.query) and CommandReply(text) then
+        NoteReply()
+      elseif not StartReplyFrame(text) then
+        if text:match("^%$ACK") then
+          ActiveReplyFrame = nil
+        elseif
+          ActiveReplyFrame and Timer.Now() - ActiveReplyFrame.lastAt <= CommunicationGrace()
+        then
+          local frame = ActiveReplyFrame
+          if AddReplyLine(frame, text) then
+            ApplyReplyLine(frame, text)
+          end
+        end
       end
     end
-    if eot and Pending and Pending.query then
-      local success = not QueryRejected and ApplyQuery(ResponseLines)
-      QueryRejected = false
-      CompleteCommand(success)
+    if eot then
+      FinishQueryFrame()
     end
   end
   function OnData()
@@ -4316,6 +4455,14 @@ if Controls then
     if Recovering and not RecoveryRequiresReconnect then
       RecoveryTimer:Start(RecoveryDelay)
     end
+    if DebugRx then
+      local hex = data:sub(1, 256):gsub(".", function(byte)
+        return string.format("%02X ", byte:byte())
+      end)
+      print("RX bytes: " .. hex .. (#data > 256 and "..." or ""))
+    end
+    ReplyGapActive = true
+    ReplyGapTimer:Start(InterRequestDelay)
     RxBuffer = RxBuffer .. data
     if #RxBuffer > ResponseByteLimit then
       Log("Receive buffer overflow")
@@ -4346,6 +4493,11 @@ if Controls then
     ServiceQueue()
   end
   function OnDisconnected(port, message)
+    LivenessTimer:Stop()
+    ActiveReplyFrame = nil
+    LastReplyAt = nil
+    ReplyGapTimer:Stop()
+    ReplyGapActive = false
     if DebugFunction then
       print("OnDisconnected() Called")
     end
@@ -4363,6 +4515,11 @@ if Controls then
     ClearFeedback()
   end
   function OnConnected()
+    LivenessTimer:Start(ResponseTimeout)
+    ActiveReplyFrame = nil
+    LastReplyAt = nil
+    ReplyGapTimer:Stop()
+    ReplyGapActive = false
     if DebugFunction then
       print("OnConnected() Called")
     end
@@ -4427,17 +4584,62 @@ if Controls then
   end
 
   --*** Event handlers ***
+  LivenessTimer.EventHandler = function()
+    -- Long-running control commands may legitimately be silent until DONE.
+    if Pending and not Pending.query then
+      return
+    end
+    if not LastReplyAt or Timer.Now() - LastReplyAt <= CommunicationGrace() then
+      return
+    end
+    LastReplyAt = nil
+    ActiveReplyFrame = nil
+    ReplyGapTimer:Stop()
+    ReplyGapActive = false
+    CommandTimer:Stop()
+    Pending = nil
+    Queue = {}
+    ResponseLines = {}
+    QueryRejected = false
+    RxBuffer = ""
+    ClearFeedback()
+    ReportStatus(4, "No recent valid replies")
+    if not RecoveryRequiresReconnect then
+      Recovering = true
+      RecoveryTimer:Start(RecoveryDelay)
+    end
+    UpdateControlAvailability()
+  end
+
   CommandTimer.EventHandler = function()
     CommandTimer:Stop()
     local command = Pending and Pending.command or "unknown"
     Log("Timed out: " .. command)
+    local responding = LastReplyAt and Timer.Now() - LastReplyAt <= CommunicationGrace()
+    if Pending and Pending.query and responding then
+      Pending = nil
+      ResponseLines = {}
+      QueryRejected = false
+      ReportStatus(1, "Responding; poll delayed: " .. command)
+      ReplyGapActive = true
+      ReplyGapTimer:Start(InterRequestDelay)
+      UpdateControlAvailability()
+      return
+    end
+    ReplyGapTimer:Stop()
+    ReplyGapActive = false
+    ActiveReplyFrame = nil
     Queue = {}
     Pending = nil
     ResponseLines = {}
     RxBuffer = ""
     QueryRejected = false
-    ReportStatus(4, "No reply: " .. command)
-    ClearFeedback()
+    if responding then
+      ReportStatus(1, "Responding; command unconfirmed: " .. command)
+    else
+      ReportStatus(4, "No reply: " .. command)
+      ClearFeedback()
+    end
     -- A sequence completion can take minutes; never overlap it with a new command.
     if command:match("^!SEQ_O") then
       Recovering = true
@@ -4450,6 +4652,9 @@ if Controls then
   end
   RecoveryTimer.EventHandler = function()
     RecoveryTimer:Stop()
+    ReplyGapTimer:Stop()
+    ReplyGapActive = false
+    ActiveReplyFrame = nil
     if SerialPort and SerialPort.BufferLength > 0 then
       SerialPort:Read(SerialPort.BufferLength)
     end
@@ -4545,6 +4750,26 @@ if Controls then
     SerialPort.Closed = OnDisconnected
     SerialPort.Error = OnDisconnected
     SerialPort.Timeout = OnDisconnected
+  end
+
+  ReplyGapTimer.EventHandler = function()
+    ReplyGapTimer:Stop()
+    if SerialPort and SerialPort.BufferLength > 0 then
+      OnData()
+      return
+    end
+    if RxBuffer ~= "" and Pending then
+      -- An undelimited partial line remains buffered until more data or timeout.
+      return
+    end
+    SettleQueryReply()
+    if RxBuffer ~= "" then
+      Log("Discarded unterminated idle receive tail after quiet interval")
+      RxBuffer = ""
+    end
+    ReplyGapTimer:Stop()
+    ReplyGapActive = false
+    ServiceQueue()
   end
 
   OpenTimer.EventHandler = function()
